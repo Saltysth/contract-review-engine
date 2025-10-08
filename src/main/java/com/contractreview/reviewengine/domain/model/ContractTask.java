@@ -5,10 +5,10 @@ import com.contractreview.reviewengine.domain.enums.ReviewType;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
 
@@ -20,6 +20,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "contract_task")
 @Data
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor

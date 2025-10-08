@@ -1,6 +1,8 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.util.HashMap;
@@ -11,7 +13,8 @@ import java.util.Map;
  * 
  * @author SaltyFish
  */
-@Value
+@Data
+@NoArgsConstructor(force = true)
 @Builder
 public class TaskConfiguration {
     
@@ -19,17 +22,20 @@ public class TaskConfiguration {
     String promptTemplate;
     RetryPolicy retryPolicy;
     Integer timeoutSeconds;
+    Integer priority;
     Map<String, Object> customSettings;
     
     public TaskConfiguration(Map<String, Object> reviewRules, 
                            String promptTemplate,
                            RetryPolicy retryPolicy,
                            Integer timeoutSeconds,
+                           Integer priority,
                            Map<String, Object> customSettings) {
         this.reviewRules = reviewRules != null ? new HashMap<>(reviewRules) : new HashMap<>();
         this.promptTemplate = promptTemplate;
         this.retryPolicy = retryPolicy != null ? retryPolicy : RetryPolicy.defaultPolicy();
         this.timeoutSeconds = timeoutSeconds != null ? timeoutSeconds : 3600;
+        this.priority = priority != null ? priority : 0;
         this.customSettings = customSettings != null ? new HashMap<>(customSettings) : new HashMap<>();
     }
     

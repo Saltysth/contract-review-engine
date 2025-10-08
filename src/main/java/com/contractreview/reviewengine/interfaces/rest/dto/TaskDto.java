@@ -10,9 +10,9 @@ import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  * 任务DTO
  */
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "任务信息")
@@ -61,22 +61,5 @@ public class TaskDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    /**
-     * 从领域对象转换为DTO
-     */
-    public static TaskDto fromDomain(Task task) {
-        return TaskDto.builder()
-                .id(task.getId().toString())
-                .taskType(task.getTaskType())
-                .status(task.getStatus())
-                .currentStage(task.getCurrentStage())
-                .configuration(task.getConfiguration())
-                .retryCount(task.getRetryCount())
-                .errorMessage(task.getErrorMessage())
-                .progress(task.getProgress())
-                .auditInfo(task.getAuditInfo())
-                .createdAt(task.getAuditInfo() != null ? task.getAuditInfo().getCreatedAt() : null)
-                .updatedAt(task.getAuditInfo() != null ? task.getAuditInfo().getUpdatedAt() : null)
-                .build();
-    }
+
 }

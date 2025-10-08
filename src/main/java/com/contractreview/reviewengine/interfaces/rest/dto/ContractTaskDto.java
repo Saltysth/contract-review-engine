@@ -8,6 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
  * 合同任务DTO
  */
 @Data
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -37,31 +39,5 @@ public class ContractTaskDto extends TaskDto {
     @Schema(description = "元数据")
     private Map<String, Object> metadata;
     
-    /**
-     * 从领域对象转换为DTO
-     */
-    public static ContractTaskDto fromDomain(ContractTask contractTask) {
-        ContractTaskDto dto = new ContractTaskDto();
-        dto.setContractId(contractTask.getContractId());
-        dto.setFilePath(contractTask.getFilePath());
-        dto.setFileHash(contractTask.getFileHash());
-        dto.setReviewType(contractTask.getReviewType());
-        dto.setMetadata(contractTask.getMetadata());
-        
-        // 复制基类属性
-        TaskDto baseDto = TaskDto.fromDomain(contractTask);
-        dto.setId(baseDto.getId());
-        dto.setTaskType(baseDto.getTaskType());
-        dto.setStatus(baseDto.getStatus());
-        dto.setCurrentStage(baseDto.getCurrentStage());
-        dto.setConfiguration(baseDto.getConfiguration());
-        dto.setRetryCount(baseDto.getRetryCount());
-        dto.setErrorMessage(baseDto.getErrorMessage());
-        dto.setProgress(baseDto.getProgress());
-        dto.setAuditInfo(baseDto.getAuditInfo());
-        dto.setCreatedAt(baseDto.getCreatedAt());
-        dto.setUpdatedAt(baseDto.getUpdatedAt());
-        
-        return dto;
-    }
+
 }

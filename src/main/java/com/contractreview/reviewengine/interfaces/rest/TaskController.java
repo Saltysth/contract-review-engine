@@ -6,6 +6,7 @@ import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskStatisticsDto;
+import com.contractreview.reviewengine.interfaces.rest.mapper.TaskMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,7 @@ public class TaskController {
     public ResponseEntity<TaskDto> getTask(@PathVariable Long taskId) {
         TaskId id = TaskId.of(taskId);
         Task task = taskService.getTaskById(id);
-        return ResponseEntity.ok(TaskDto.fromDomain(task));
+        return ResponseEntity.ok(TaskMapper.INSTANCE.toDto(task));
     }
     
     /**
@@ -60,7 +61,7 @@ public class TaskController {
             tasks = taskService.getTasksByStatus(domainStatus, pageable);
         }
         
-        Page<TaskDto> taskDtos = tasks.map(TaskDto::fromDomain);
+        Page<TaskDto> taskDtos = tasks.map(TaskMapper.INSTANCE::toDto);
         return ResponseEntity.ok(taskDtos);
     }
     
@@ -116,7 +117,7 @@ public class TaskController {
     public ResponseEntity<List<TaskDto>> getTimeoutTasks() {
         List<Task> timeoutTasks = taskService.findTimeoutTasks();
         List<TaskDto> taskDtos = timeoutTasks.stream()
-                .map(TaskDto::fromDomain)
+                .map(TaskMapper.INSTANCE::toDto)
                 .toList();
         return ResponseEntity.ok(taskDtos);
     }
@@ -129,7 +130,7 @@ public class TaskController {
     public ResponseEntity<List<TaskDto>> getRetryableTasks() {
         List<Task> retryableTasks = taskService.findRetryableTasks();
         List<TaskDto> taskDtos = retryableTasks.stream()
-                .map(TaskDto::fromDomain)
+                .map(TaskMapper.INSTANCE::toDto)
                 .toList();
         return ResponseEntity.ok(taskDtos);
     }

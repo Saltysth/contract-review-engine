@@ -59,16 +59,5 @@ public class ContractReviewRequestDto {
     @Schema(description = "元数据")
     private Map<String, Object> metadata;
     
-    /**
-     * 转换为任务配置
-     */
-    public TaskConfiguration toTaskConfiguration() {
-        RetryPolicy retryPolicy = RetryPolicy.builder()
-                .maxRetries(maxRetries)
-                .build();
-        
-        return TaskConfiguration.builder()
-                .retryPolicy(retryPolicy)
-                .build();
-    }
+
 }

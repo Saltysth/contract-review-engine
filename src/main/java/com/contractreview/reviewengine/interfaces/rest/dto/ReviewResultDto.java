@@ -57,22 +57,5 @@ public class ReviewResultDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
     
-    /**
-     * 从领域对象转换为DTO
-     */
-    public static ReviewResultDto fromDomain(ReviewResult reviewResult) {
-        AuditInfo auditInfo = reviewResult.getAuditInfo();
-        return ReviewResultDto.builder()
-                .taskId(reviewResult.getTaskId().toString())
-                .currentStage(reviewResult.getCurrentStage())
-                .riskAssessment(reviewResult.getRiskAssessment())
-                .extractedClauses(reviewResult.getExtractedClauses())
-                .analysisResult(reviewResult.getAnalysisResult())
-                .summary("审查完成") // 临时默认值
-                .recommendations(reviewResult.getRecommendations())
-                .auditInfo(auditInfo)
-                .createdAt(auditInfo != null ? auditInfo.getCreatedAt() : null)
-                .updatedAt(auditInfo != null ? auditInfo.getUpdatedAt() : null)
-                .build();
-    }
+
 }

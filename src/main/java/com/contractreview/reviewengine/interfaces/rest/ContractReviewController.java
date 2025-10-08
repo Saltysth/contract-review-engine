@@ -7,6 +7,8 @@ import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
+import com.contractreview.reviewengine.interfaces.rest.mapper.ContractTaskMapper;
+import com.contractreview.reviewengine.interfaces.rest.mapper.ReviewResultMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -41,11 +43,11 @@ public class ContractReviewController {
                 request.getFilePath(),
                 request.getFileHash(),
                 request.getReviewType(),
-                request.toTaskConfiguration(),
+                ContractTaskMapper.INSTANCE.toTaskConfiguration(request),
                 request.getMetadata()
         );
         
-        return ResponseEntity.ok(ContractTaskDto.fromDomain(contractTask));
+        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractTask));
     }
     
     /**
@@ -67,7 +69,7 @@ public class ContractReviewController {
     public ResponseEntity<ContractTaskDto> getContractTask(@PathVariable Long taskId) {
         TaskId id = TaskId.of(taskId);
         ContractTask contractTask = contractReviewService.getContractTask(id);
-        return ResponseEntity.ok(ContractTaskDto.fromDomain(contractTask));
+        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractTask));
     }
     
     /**
@@ -80,7 +82,7 @@ public class ContractReviewController {
         Optional<ReviewResult> result = contractReviewService.getReviewResult(id);
         
         if (result.isPresent()) {
-            return ResponseEntity.ok(ReviewResultDto.fromDomain(result.get()));
+            return ResponseEntity.ok(ReviewResultMapper.INSTANCE.toDto(result.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -96,7 +98,7 @@ public class ContractReviewController {
         
         List<ContractTask> tasks = contractReviewService.getTasksByContractId(contractId);
         List<ContractTaskDto> taskDtos = tasks.stream()
-                .map(ContractTaskDto::fromDomain)
+                .map(ContractTaskMapper.INSTANCE::toDto)
                 .toList();
         
         return ResponseEntity.ok(taskDtos);
@@ -113,7 +115,7 @@ public class ContractReviewController {
         Optional<ContractTask> latestTask = contractReviewService.getLatestTaskByContractId(contractId);
         
         if (latestTask.isPresent()) {
-            return ResponseEntity.ok(ContractTaskDto.fromDomain(latestTask.get()));
+            return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(latestTask.get()));
         } else {
             return ResponseEntity.notFound().build();
         }

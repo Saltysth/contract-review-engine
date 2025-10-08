@@ -14,7 +14,7 @@ public enum TaskType {
     CLAUSE_EXTRACTION("条款提取", "从合同中提取特定条款"),
     RISK_ANALYSIS("风险分析", "合同风险分析任务"),
     COMPLIANCE_CHECK("合规检查", "合同合规性检查任务"),
-    BATCH_REVIEW("批量审查", "批量合同审查任务"),
+    CLASSIFICATION("分类识别", "识别合同分类"),
     IMMEDIATE_REVIEW("即时审查", "立即执行的合同审查任务");
     
     private final String displayName;

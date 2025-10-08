@@ -1,5 +1,7 @@
 package com.contractreview.reviewengine.domain.model;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 import java.io.Serializable;
@@ -11,6 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author SaltyFish
  */
 @Value
+@NoArgsConstructor(force = true)
 public class TaskId implements Serializable {
     
     Long value;

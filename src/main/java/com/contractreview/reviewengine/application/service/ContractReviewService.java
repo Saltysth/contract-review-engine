@@ -49,7 +49,7 @@ public class ContractReviewService {
         }
         
         // 创建基础任务
-        var task = taskService.createTask(TaskType.IMMEDIATE_REVIEW, configuration);
+        var task = taskService.createTask(TaskType.CLASSIFICATION, configuration);
         
         // 创建合同任务
         ContractTask contractTask = new ContractTask();
