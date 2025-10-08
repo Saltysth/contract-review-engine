@@ -64,6 +64,6 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
     /**
      * 查找需要重试的失败任务
      */
-    @Query("SELECT t FROM Task t WHERE t.status = :failedStatus AND t.retryCount < t.configuration.retryPolicy.maxRetries")
+    @Query("SELECT t FROM Task t WHERE t.status = :failedStatus AND t.retryCount < t.maxRetries")
     List<Task> findRetryableTasks(@Param("failedStatus") TaskStatus failedStatus);
 }

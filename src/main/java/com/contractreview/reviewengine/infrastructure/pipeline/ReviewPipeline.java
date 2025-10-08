@@ -44,7 +44,6 @@ public class ReviewPipeline {
                                 currentStage, contractTask.getId(), stageResult.getErrorMessage());
                         
                         return resultBuilder
-                                .currentStage(ExecutionStage.FAILED)
                                 .build();
                     }
                     
@@ -59,8 +58,7 @@ public class ReviewPipeline {
             ReviewResult result = resultBuilder
                     .build();
             
-            result.initializeAuditInfo();
-            
+
             log.info("Review pipeline completed successfully for task: {}", contractTask.getId());
             return result;
             
@@ -68,7 +66,6 @@ public class ReviewPipeline {
             log.error("Review pipeline failed for task: {}", contractTask.getId(), e);
             
             return resultBuilder
-                    .currentStage(ExecutionStage.FAILED)
                     .build();
         }
     }

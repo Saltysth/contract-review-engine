@@ -25,7 +25,7 @@ import java.util.Map;
 public class ContractTaskDto extends TaskDto {
     
     @Schema(description = "合同ID", example = "CONTRACT-2024-001")
-    private String contractId;
+    private Long contractId;
     
     @Schema(description = "文件路径", example = "/contracts/2024/contract-001.pdf")
     private String filePath;
@@ -35,9 +35,6 @@ public class ContractTaskDto extends TaskDto {
     
     @Schema(description = "审查类型")
     private ReviewType reviewType;
-    
-    @Schema(description = "元数据")
-    private Map<String, Object> metadata;
     
 
 }

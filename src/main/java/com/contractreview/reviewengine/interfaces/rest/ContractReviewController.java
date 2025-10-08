@@ -94,7 +94,7 @@ public class ContractReviewController {
     @GetMapping("/contracts/{contractId}/tasks")
     @Operation(summary = "获取合同任务", description = "获取指定合同的所有审查任务")
     public ResponseEntity<List<ContractTaskDto>> getTasksByContractId(
-            @PathVariable String contractId) {
+            @PathVariable Long contractId) {
         
         List<ContractTask> tasks = contractReviewService.getTasksByContractId(contractId);
         List<ContractTaskDto> taskDtos = tasks.stream()
@@ -110,7 +110,7 @@ public class ContractReviewController {
     @GetMapping("/contracts/{contractId}/latest-task")
     @Operation(summary = "获取最新任务", description = "获取指定合同的最新审查任务")
     public ResponseEntity<ContractTaskDto> getLatestTaskByContractId(
-            @PathVariable String contractId) {
+            @PathVariable Long contractId) {
         
         Optional<ContractTask> latestTask = contractReviewService.getLatestTaskByContractId(contractId);
         

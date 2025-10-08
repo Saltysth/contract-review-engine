@@ -1,16 +1,14 @@
 package com.contractreview.reviewengine.domain.model;
 
-import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
-import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
+import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * 合同审查任务实体
@@ -18,115 +16,119 @@ import jakarta.persistence.*;
  * @author SaltyFish
  */
 @Entity
-@Table(name = "contract_task")
+@Table(name = "contract_task", indexes = {
+    @Index(name = "idx_contract_task_contract_id", columnList = "contract_id"),
+    @Index(name = "idx_contract_task_review_type", columnList = "review_type"),
+    @Index(name = "idx_contract_task_execution_stage", columnList = "execution_stage")
+})
 @Data
-@SuperBuilder
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContractTask extends Task {
+public class ContractTask {
     
+    @Id
+    @Column(nullable = false)
+    private Long id;
+
+    @Column(name = "task_id", nullable = false)
+    private Long taskId;
+
     @Column(name = "contract_id", nullable = false)
-    private String contractId;
+    private Long contractId;
     
-    @Column(name = "file_path", nullable = false)
-    private String filePath;
-    
-    @Column(name = "file_hash")
-    private String fileHash;
-    
+    @Column(name = "file_uuid", nullable = false, length = 50)
+    private String fileUuid;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "review_type", nullable = false)
+    @Column(name = "review_type", nullable = false, length = 50)
     private ReviewType reviewType;
     
-    @Column(name = "file_size")
-    private Long fileSize;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "review_rules", columnDefinition = "jsonb")
+    private String reviewRules;
     
-    @Column(name = "file_name")
-    private String fileName;
+    @Column(name = "prompt_template", columnDefinition = "TEXT")
+    private String promptTemplate;
     
-    public ContractTask(String taskName, String contractId, String filePath, ReviewType reviewType, Long createdBy) {
-        super(taskName, TaskType.CONTRACT_REVIEW, 0, createdBy);
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "result_data", columnDefinition = "jsonb")
+    private String resultData;
+    
+    @Column(name = "execution_stage", length = 50)
+    private String executionStage = "PENDING";
+    
+    @Column(name = "progress_percentage")
+    private Integer progressPercentage = 0;
+
+
+    @Embedded
+    private AuditInfo auditInfo;
+
+    /**
+     * 构造函数
+     */
+    public ContractTask(Long taskId, Long contractId, String fileUuid, ReviewType reviewType) {
+        this.taskId = taskId;
         this.contractId = contractId;
-        this.filePath = filePath;
+        this.fileUuid = fileUuid;
         this.reviewType = reviewType;
+        this.executionStage = "PENDING";
+        this.progressPercentage = 0;
     }
     
     /**
-     * 更新配置
+     * 更新执行阶段
      */
-    public void updateConfiguration(TaskConfiguration newConfiguration) {
-        this.setConfiguration(newConfiguration);
-        updateAuditInfo();
+    public void updateExecutionStage(String stage) {
+        this.executionStage = stage;
     }
     
     /**
-     * 更新进度
+     * 更新进度百分比
      */
-    public void updateReviewProgress(ReviewProgress newProgress) {
-        this.setProgress(newProgress);
-        updateAuditInfo();
+    public void updateProgress(Integer percentage) {
+        this.progressPercentage = percentage;
     }
     
     /**
-     * 检查是否可以执行
+     * 更新审查规则
      */
-    public boolean canExecute() {
-        return getStatus().canExecute();
+    public void updateReviewRules(String rules) {
+        this.reviewRules = rules;
     }
     
     /**
-     * 获取文件路径
+     * 更新提示模板
      */
-    public String getFilePath() {
-        return this.filePath;
+    public void updatePromptTemplate(String template) {
+        this.promptTemplate = template;
     }
     
     /**
-     * 获取文件哈希
+     * 更新结果数据
      */
-    public String getFileHash() {
-        return this.fileHash;
+    public void updateResultData(String data) {
+        this.resultData = data;
     }
     
     /**
-     * 设置文件哈希
+     * 检查任务是否完成
      */
-    public void setFileHash(String fileHash) {
-        this.fileHash = fileHash;
-        updateAuditInfo();
+    public boolean isCompleted() {
+        return "COMPLETED".equals(this.executionStage);
     }
     
     /**
-     * 设置文件大小
+     * 检查任务是否正在执行
      */
-    public void setFileSize(Long fileSize) {
-        this.fileSize = fileSize;
-        updateAuditInfo();
+    public boolean isExecuting() {
+        return "EXECUTING".equals(this.executionStage);
     }
     
     /**
-     * 设置文件名
+     * 检查任务是否待处理
      */
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-        updateAuditInfo();
-    }
-    
-    /**
-     * 更新审计信息
-     */
-    private void updateAuditInfo() {
-        if (getAuditInfo() != null) {
-            setAuditInfo(getAuditInfo().update(getCurrentUserId()));
-        }
-    }
-    
-    /**
-     * 获取当前用户ID
-     */
-    private Long getCurrentUserId() {
-        // TODO: 从SecurityContext获取当前用户ID
-        return 1L;
+    public boolean isPending() {
+        return "PENDING".equals(this.executionStage);
     }
 }

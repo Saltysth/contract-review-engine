@@ -44,7 +44,7 @@ public class ReviewResultDto {
     private String summary;
     
     @Schema(description = "建议")
-    private List<String> recommendations;
+    private String recommendations;
     
     @Schema(description = "审计信息")
     private AuditInfo auditInfo;

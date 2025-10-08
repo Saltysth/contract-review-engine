@@ -21,7 +21,7 @@ class MapperTest {
     void shouldMapRequestDtoToTaskConfiguration() {
         // Given
         ContractReviewRequestDto request = ContractReviewRequestDto.builder()
-                .contractId("CONTRACT-2024-001")
+                .contractId(1L)
                 .filePath("/contracts/test.pdf")
                 .fileHash("sha256:abc123")
                 .reviewType(ReviewType.FULL_REVIEW)

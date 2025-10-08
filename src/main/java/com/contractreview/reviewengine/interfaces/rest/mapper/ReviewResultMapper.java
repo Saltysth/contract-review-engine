@@ -18,20 +18,16 @@ public interface ReviewResultMapper {
      * Domain对象转DTO
      */
     @Mapping(target = "taskId", source = "taskId", qualifiedByName = "taskIdToString")
-    @Mapping(target = "createdAt", source = "auditInfo.createdAt")
-    @Mapping(target = "updatedAt", source = "auditInfo.updatedAt")
-    @Mapping(target = "summary", expression = "java(generateSummary(reviewResult))")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "summary", source = "summary")
     ReviewResultDto toDto(ReviewResult reviewResult);
     
     /**
      * DTO转Domain对象
      */
     @Mapping(target = "taskId", source = "taskId", qualifiedByName = "stringToTaskId")
-    @Mapping(target = "auditInfo", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "reviewType", ignore = true)
-    @Mapping(target = "confidenceScore", ignore = true)
-    @Mapping(target = "processingTimeMs", ignore = true)
     ReviewResult toEntity(ReviewResultDto dto);
     
     /**
@@ -49,21 +45,5 @@ public interface ReviewResultMapper {
     default Long stringToTaskId(String id) {
         return id != null ? Long.valueOf(id) : null;
     }
-    
-    /**
-     * 生成审查摘要
-     */
-    default String generateSummary(ReviewResult reviewResult) {
-        if (reviewResult == null) {
-            return null;
-        }
-        
-        // 根据风险评估生成摘要
-        if (reviewResult.getRiskAssessment() != null) {
-            String riskLevel = reviewResult.getRiskAssessment().getOverallRiskLevel().name();
-            return String.format("审查完成，整体风险等级: %s", riskLevel);
-        }
-        
-        return "审查完成";
-    }
+
 }

@@ -38,7 +38,6 @@ public class TaskService {
                 .id(taskId)
                 .taskType(taskType)
                 .status(TaskStatus.PENDING)
-                .configuration(configuration)
                 .retryCount(0)
                 .build();
         

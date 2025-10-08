@@ -1,7 +1,12 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import java.time.LocalDateTime;
 
 /**
@@ -9,12 +14,21 @@ import java.time.LocalDateTime;
  * 
  * @author SaltyFish
  */
-@Value
+@Embeddable
+@Data
+@NoArgsConstructor
 public class AuditInfo {
-    
+
+    @Column(name = "created_by")
     Long createdBy;
+    
+    @Column(name = "created_at")
     LocalDateTime createdAt;
+    
+    @Column(name = "updated_by")
     Long updatedBy;
+    
+    @Column(name = "updated_at")
     LocalDateTime updatedAt;
     
     public AuditInfo(Long createdBy, LocalDateTime createdAt, Long updatedBy, LocalDateTime updatedAt) {

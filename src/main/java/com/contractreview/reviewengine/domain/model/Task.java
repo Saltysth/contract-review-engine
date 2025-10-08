@@ -1,22 +1,26 @@
 package com.contractreview.reviewengine.domain.model;
 
-import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
-import com.contractreview.reviewengine.domain.enums.ExecutionStage;
+import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
-import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
-import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
-import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 任务聚合根 - 基类
@@ -39,29 +43,18 @@ public class Task {
     @Column(name = "task_name", nullable = false)
     private String taskName;
     
-    @Column(name = "contract_id")
-    private String contractId;
-    
     @Enumerated(EnumType.STRING)
     @Column(name = "task_type", nullable = false)
     private TaskType taskType;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "task_status", nullable = false)
     @Builder.Default
     private TaskStatus status = TaskStatus.PENDING;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "current_stage")
-    private ExecutionStage currentStage;
     
     @Column(name = "priority")
     @Builder.Default
     private Integer priority = 0;
-    
-    @Column(name = "configuration", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
-    private TaskConfiguration configuration;
     
     @Column(name = "retry_count")
     @Builder.Default
@@ -75,23 +68,11 @@ public class Task {
     @Builder.Default
     private Long timeoutSeconds = 3600L;
     
-    @Column(name = "error_message", columnDefinition = "TEXT")
-    private String errorMessage;
-    
     @Column(name = "started_at")
     private LocalDateTime startedAt;
     
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
-    
-    @Column(name = "progress", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
-    private ReviewProgress progress;
-    
-    @Column(name = "metadata", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
-    @Builder.Default
-    private Map<String, Object> metadata = new HashMap<>();
     
     @Embedded
     private AuditInfo auditInfo;
@@ -102,7 +83,6 @@ public class Task {
         this.status = TaskStatus.PENDING;
         this.priority = priority != null ? priority : 0;
         this.auditInfo = AuditInfo.create(createdBy);
-        this.metadata = new HashMap<>();
         this.retryCount = 0;
         this.maxRetries = 3;
         this.timeoutSeconds = 3600L;
@@ -133,8 +113,6 @@ public class Task {
         validateStatusTransition(TaskStatus.RUNNING);
         this.status = TaskStatus.RUNNING;
         this.startedAt = LocalDateTime.now();
-        this.errorMessage = null;
-        this.currentStage = ExecutionStage.DOCUMENT_PARSING;
         updateAuditInfo();
     }
     
@@ -145,7 +123,6 @@ public class Task {
         validateStatusTransition(TaskStatus.COMPLETED);
         this.status = TaskStatus.COMPLETED;
         this.completedAt = LocalDateTime.now();
-        this.currentStage = ExecutionStage.COMPLETED;
         updateAuditInfo();
     }
     
@@ -154,9 +131,7 @@ public class Task {
      */
     public void fail(String errorMessage) {
         this.status = TaskStatus.FAILED;
-        this.errorMessage = errorMessage;
         this.completedAt = LocalDateTime.now();
-        this.currentStage = ExecutionStage.FAILED;
         updateAuditInfo();
     }
     
@@ -170,10 +145,8 @@ public class Task {
         
         this.retryCount++;
         this.status = TaskStatus.PENDING;
-        this.errorMessage = null;
         this.startedAt = null;
         this.completedAt = null;
-        this.currentStage = null;
         updateAuditInfo();
     }
     
@@ -204,7 +177,6 @@ public class Task {
             throw new IllegalArgumentException("进度百分比必须在0-100之间");
         }
         
-        this.metadata.put("progress", percentage);
         updateAuditInfo();
     }
     
@@ -248,17 +220,9 @@ public class Task {
      * 添加元数据
      */
     public void addMetadata(String key, Object value) {
-        this.metadata.put(key, value);
         updateAuditInfo();
     }
-    
-    /**
-     * 获取元数据
-     */
-    public Object getMetadata(String key) {
-        return this.metadata.get(key);
-    }
-    
+
     /**
      * 更新审计信息
      */

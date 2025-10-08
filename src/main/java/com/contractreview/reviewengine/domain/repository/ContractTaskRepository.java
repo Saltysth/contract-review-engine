@@ -19,27 +19,17 @@ public interface ContractTaskRepository extends JpaRepository<ContractTask, Task
     /**
      * 根据合同ID查找任务
      */
-    List<ContractTask> findByContractId(String contractId);
+    List<ContractTask> findByContractId(Long contractId);
     
     /**
      * 根据文件路径查找任务
      */
-    Optional<ContractTask> findByFilePath(String filePath);
+    Optional<ContractTask> findByFileUuid(String fileUUID);
     
     /**
      * 查找指定合同的最新任务
      */
     @Query("SELECT ct FROM ContractTask ct WHERE ct.contractId = :contractId ORDER BY ct.auditInfo.createdAt DESC")
-    List<ContractTask> findLatestByContractId(@Param("contractId") String contractId);
+    List<ContractTask> findLatestByContractId(@Param("contractId") Long contractId);
     
-    /**
-     * 根据文件哈希查找任务（避免重复处理相同文件）
-     */
-    Optional<ContractTask> findByFileHash(String fileHash);
-    
-    /**
-     * 查找包含特定元数据的任务
-     */
-    @Query("SELECT ct FROM ContractTask ct WHERE JSON_EXTRACT(ct.metadata, '$.department') = :department")
-    List<ContractTask> findByDepartment(@Param("department") String department);
 }

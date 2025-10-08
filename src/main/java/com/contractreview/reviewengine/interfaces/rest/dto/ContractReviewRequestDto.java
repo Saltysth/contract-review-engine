@@ -26,7 +26,7 @@ public class ContractReviewRequestDto {
     
     @NotBlank(message = "合同ID不能为空")
     @Schema(description = "合同ID", example = "CONTRACT-2024-001", required = true)
-    private String contractId;
+    private Long contractId;
     
     @NotBlank(message = "文件路径不能为空")
     @Schema(description = "文件路径", example = "/contracts/2024/contract-001.pdf", required = true)

@@ -1,6 +1,6 @@
 # 合同审查引擎应用配置
 server:
-  port: 8080
+  port: 12000
   servlet:
     context-path: /contract-review-engine
 
@@ -166,21 +166,3 @@ app:
       webhook:
         enabled: true
         url: ${WEBHOOK_URL:}
-
----
-# 开发环境配置
-spring:
-  config:
-    activate:
-      on-profile: dev
-  
-  jpa:
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-
-logging:
-  level:
-    com.contractreview.reviewengine: DEBUG
-    org.springframework: DEBUG

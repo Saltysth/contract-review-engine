@@ -35,7 +35,7 @@ public class ParsingStage implements PipelineStage {
             // 3. 识别文档结构
             // 4. 预处理文本 (清理、格式化)
             
-            String parsedContent = parseDocument(contractTask.getFilePath());
+            String parsedContent = parseDocument(contractTask.getFileUuid());
             
             return StageResult.builder()
                     .stage(ExecutionStage.DOCUMENT_PARSING)
@@ -61,7 +61,7 @@ public class ParsingStage implements PipelineStage {
     @Override
     public boolean supports(ContractTask contractTask) {
         // 检查文件类型是否支持
-        String filePath = contractTask.getFilePath();
+        String filePath = contractTask.getFileUuid();
         return filePath != null && 
                (filePath.endsWith(".pdf") || 
                 filePath.endsWith(".doc") || 

@@ -19,27 +19,12 @@ public interface ContractTaskMapper {
      * Domain对象转DTO
      */
     @Mapping(target = "id", source = "id", qualifiedByName = "taskIdToString")
-    @Mapping(target = "createdAt", source = "auditInfo.createdAt")
-    @Mapping(target = "updatedAt", source = "auditInfo.updatedAt")
     ContractTaskDto toDto(ContractTask contractTask);
     
     /**
      * 请求DTO转Domain对象（用于创建）
      */
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "taskType", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "currentStage", ignore = true)
-    @Mapping(target = "configuration", ignore = true)
-    @Mapping(target = "retryCount", ignore = true)
-    @Mapping(target = "errorMessage", ignore = true)
-    @Mapping(target = "progress", ignore = true)
-    @Mapping(target = "auditInfo", ignore = true)
-    @Mapping(target = "taskName", ignore = true)
-    @Mapping(target = "timeoutSeconds", ignore = true)
-    @Mapping(target = "startedAt", ignore = true)
-    @Mapping(target = "completedAt", ignore = true)
-
     ContractTask toEntity(ContractReviewRequestDto dto);
     
     /**

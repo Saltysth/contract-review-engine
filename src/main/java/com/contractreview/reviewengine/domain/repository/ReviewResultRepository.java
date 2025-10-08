@@ -19,14 +19,9 @@ import java.util.Optional;
 public interface ReviewResultRepository extends JpaRepository<ReviewResult, TaskId> {
     
     /**
-     * 根据风险等级查找结果
-     */
-    List<ReviewResult> findByRiskAssessmentOverallRiskLevel(RiskLevel riskLevel);
-    
-    /**
      * 查找高风险结果
      */
-    @Query("SELECT rr FROM ReviewResult rr WHERE rr.riskAssessment.overallRiskLevel IN (:highRiskLevels)")
+    @Query("SELECT rr FROM ReviewResult rr WHERE rr.overallRiskLevel IN (:highRiskLevels)")
     List<ReviewResult> findHighRiskResults(@Param("highRiskLevels") List<RiskLevel> highRiskLevels);
     
     /**
@@ -37,25 +32,19 @@ public interface ReviewResultRepository extends JpaRepository<ReviewResult, Task
     /**
      * 查找指定时间范围内的结果
      */
-    @Query("SELECT rr FROM ReviewResult rr WHERE rr.auditInfo.createdAt BETWEEN :startTime AND :endTime")
+    @Query("SELECT rr FROM ReviewResult rr WHERE rr.createdAt BETWEEN :startTime AND :endTime")
     List<ReviewResult> findByCreatedAtBetween(@Param("startTime") LocalDateTime startTime, 
                                             @Param("endTime") LocalDateTime endTime);
     
     /**
      * 统计各风险等级的数量
      */
-    @Query("SELECT rr.riskAssessment.overallRiskLevel, COUNT(rr) FROM ReviewResult rr GROUP BY rr.riskAssessment.overallRiskLevel")
+    @Query("SELECT rr.overallRiskLevel, COUNT(rr) FROM ReviewResult rr GROUP BY rr.overallRiskLevel")
     List<Object[]> countByRiskLevel();
-    
-    /**
-     * 查找包含特定条款类型的结果
-     */
-    @Query("SELECT DISTINCT rr FROM ReviewResult rr JOIN rr.extractedClauses ec WHERE ec.clauseType = :clauseType")
-    List<ReviewResult> findByClauseType(@Param("clauseType") String clauseType);
     
     /**
      * 查找审查得分在指定范围内的结果
      */
-    @Query("SELECT rr FROM ReviewResult rr WHERE rr.riskAssessment.overallScore BETWEEN :minScore AND :maxScore")
+    @Query("SELECT rr FROM ReviewResult rr WHERE rr.overallRiskLevel BETWEEN :minScore AND :maxScore")
     List<ReviewResult> findByScoreRange(@Param("minScore") Double minScore, @Param("maxScore") Double maxScore);
 }

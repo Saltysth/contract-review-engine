@@ -34,17 +34,17 @@ public class ContractReviewService {
      * 创建合同审查任务
      */
     public ContractTask createContractReviewTask(
-            String contractId,
+            Long contractId,
             String filePath,
             String fileHash,
             ReviewType reviewType,
             TaskConfiguration configuration,
             Map<String, Object> metadata) {
         
-        // 检查是否已存在相同文件的任务
-        Optional<ContractTask> existingTask = contractTaskRepository.findByFileHash(fileHash);
+        // TODO 检查是否已存在相同文件的任务
+        Optional<ContractTask> existingTask = contractTaskRepository.findByFileUuid(filePath);
         if (existingTask.isPresent()) {
-            log.info("Contract task already exists for file hash: {}", fileHash);
+            log.info("Contract task already exists for file hash: {}", filePath);
             return existingTask.get();
         }
         
@@ -54,17 +54,10 @@ public class ContractReviewService {
         // 创建合同任务
         ContractTask contractTask = new ContractTask();
         contractTask.setId(task.getId());
-        contractTask.setTaskType(task.getTaskType());
-        contractTask.setStatus(task.getStatus());
-        contractTask.setConfiguration(task.getConfiguration());
-        contractTask.setRetryCount(task.getRetryCount());
-        contractTask.setAuditInfo(task.getAuditInfo());
         contractTask.setContractId(contractId);
-        contractTask.setFilePath(filePath);
-        contractTask.setFileHash(fileHash);
+        contractTask.setFileUuid(filePath);
         contractTask.setReviewType(reviewType);
-        contractTask.setMetadata(metadata);
-        
+
         ContractTask savedTask = contractTaskRepository.save(contractTask);
         log.info("Created contract review task: {} for contract: {}", task.getId(), contractId);
         
@@ -84,7 +77,7 @@ public class ContractReviewService {
      * 根据合同ID获取任务列表
      */
     @Transactional(readOnly = true)
-    public List<ContractTask> getTasksByContractId(String contractId) {
+    public List<ContractTask> getTasksByContractId(Long contractId) {
         return contractTaskRepository.findByContractId(contractId);
     }
     
@@ -92,7 +85,7 @@ public class ContractReviewService {
      * 获取合同的最新任务
      */
     @Transactional(readOnly = true)
-    public Optional<ContractTask> getLatestTaskByContractId(String contractId) {
+    public Optional<ContractTask> getLatestTaskByContractId(Long contractId) {
         List<ContractTask> tasks = contractTaskRepository.findLatestByContractId(contractId);
         return tasks.isEmpty() ? Optional.empty() : Optional.of(tasks.get(0));
     }
