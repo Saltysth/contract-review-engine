@@ -29,7 +29,7 @@ public interface ContractTaskRepository extends JpaRepository<ContractTask, Task
     /**
      * 查找指定合同的最新任务
      */
-    @Query("SELECT ct FROM ContractTask ct WHERE ct.contractId = :contractId ORDER BY ct.auditInfo.createdAt DESC")
+    @Query("SELECT ct FROM ContractTask ct WHERE ct.contractId = :contractId ORDER BY ct.auditInfo.createdTime DESC")
     List<ContractTask> findLatestByContractId(@Param("contractId") Long contractId);
     
 }

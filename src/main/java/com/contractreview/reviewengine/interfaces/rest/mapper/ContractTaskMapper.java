@@ -18,13 +18,12 @@ public interface ContractTaskMapper {
     /**
      * Domain对象转DTO
      */
-    @Mapping(target = "id", source = "id", qualifiedByName = "taskIdToString")
+    @Mapping(target = "reviewRules",  ignore = true)
     ContractTaskDto toDto(ContractTask contractTask);
     
     /**
      * 请求DTO转Domain对象（用于创建）
      */
-    @Mapping(target = "id", ignore = true)
     ContractTask toEntity(ContractReviewRequestDto dto);
     
     /**
@@ -33,8 +32,6 @@ public interface ContractTaskMapper {
     @Mapping(target = "retryPolicy", source = ".", qualifiedByName = "buildRetryPolicy")
     @Mapping(target = "timeoutSeconds", source = "timeoutMinutes", qualifiedByName = "minutesToSeconds")
     @Mapping(target = "priority", source = "priority")
-    @Mapping(target = "reviewRules", ignore = true)
-    @Mapping(target = "promptTemplate", ignore = true)
     @Mapping(target = "customSettings", ignore = true)
     TaskConfiguration toTaskConfiguration(ContractReviewRequestDto dto);
     
@@ -70,14 +67,13 @@ public interface ContractTaskMapper {
         if (dto == null) {
             return com.contractreview.reviewengine.domain.valueobject.RetryPolicy.defaultPolicy();
         }
-        
+
         int maxRetries = dto.getMaxRetries() != null ? dto.getMaxRetries() : 3;
         long initialDelayMs = dto.getRetryIntervalSeconds() != null ? dto.getRetryIntervalSeconds() * 1000L : 1000L;
-        
+
         return com.contractreview.reviewengine.domain.valueobject.RetryPolicy.builder()
                 .maxRetries(maxRetries)
-                .initialDelayMs(initialDelayMs)
-                .maxDelayMs(Math.max(initialDelayMs * 10, 30000L))
+                .maxRetryIntervalMs(Math.max(initialDelayMs * 10, 30000L))
                 .backoffMultiplier(2.0)
                 .exponentialBackoff(true)
                 .build();

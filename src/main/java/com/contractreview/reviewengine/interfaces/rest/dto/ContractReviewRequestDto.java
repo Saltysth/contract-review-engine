@@ -32,10 +32,6 @@ public class ContractReviewRequestDto {
     @Schema(description = "文件路径", example = "/contracts/2024/contract-001.pdf", required = true)
     private String filePath;
     
-    @NotBlank(message = "文件哈希不能为空")
-    @Schema(description = "文件哈希", example = "sha256:abc123...", required = true)
-    private String fileHash;
-    
     @NotNull(message = "审查类型不能为空")
     @Schema(description = "审查类型", required = true)
     private ReviewType reviewType;
@@ -55,9 +51,6 @@ public class ContractReviewRequestDto {
     @Schema(description = "重试间隔(秒)", example = "60")
     @Builder.Default
     private Integer retryIntervalSeconds = 60;
-    
-    @Schema(description = "元数据")
-    private Map<String, Object> metadata;
     
 
 }

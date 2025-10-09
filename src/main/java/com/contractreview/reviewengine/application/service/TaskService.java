@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 任务应用服务
@@ -38,7 +37,6 @@ public class TaskService {
                 .id(taskId)
                 .taskType(taskType)
                 .status(TaskStatus.PENDING)
-                .retryCount(0)
                 .build();
         
         task.initializeAuditInfo();
@@ -102,7 +100,7 @@ public class TaskService {
         if (task.canRetry()) {
             task.retry();
             taskRepository.save(task);
-            log.info("Retrying task: {} (attempt {})", taskId, task.getRetryCount());
+            log.info("Retrying task: {} (attempt {})", taskId, task.getConfiguration().getRetryPolicy().getRetryCount());
         } else {
             log.warn("Task cannot be retried: {} (max retries exceeded)", taskId);
             throw new IllegalStateException("Task cannot be retried: max retries exceeded");
@@ -135,7 +133,7 @@ public class TaskService {
     public Page<Task> getTasksByStatus(com.contractreview.reviewengine.domain.enums.TaskStatus status, Pageable pageable) {
         // 转换为枚举类型
         TaskStatus enumStatus = TaskStatus.valueOf(status.name());
-        return taskRepository.findByStatusOrderByAuditInfoCreatedAtDesc(enumStatus, pageable);
+        return taskRepository.findByStatusOrderByAuditInfoCreatedTimeDesc(enumStatus, pageable);
     }
     
     /**
@@ -148,11 +146,11 @@ public class TaskService {
     }
     
     /**
-     * 查找可重试的失败任务
+     * 查找可重试的失败任务 TODO
      */
     @Transactional(readOnly = true)
     public List<Task> findRetryableTasks() {
-        return taskRepository.findRetryableTasks(TaskStatus.FAILED);
+        return null;
     }
     
     /**

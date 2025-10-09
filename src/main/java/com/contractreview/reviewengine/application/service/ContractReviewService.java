@@ -36,17 +36,8 @@ public class ContractReviewService {
     public ContractTask createContractReviewTask(
             Long contractId,
             String filePath,
-            String fileHash,
             ReviewType reviewType,
-            TaskConfiguration configuration,
-            Map<String, Object> metadata) {
-        
-        // TODO 检查是否已存在相同文件的任务
-        Optional<ContractTask> existingTask = contractTaskRepository.findByFileUuid(filePath);
-        if (existingTask.isPresent()) {
-            log.info("Contract task already exists for file hash: {}", filePath);
-            return existingTask.get();
-        }
+            TaskConfiguration configuration) {
         
         // 创建基础任务
         var task = taskService.createTask(TaskType.CLASSIFICATION, configuration);

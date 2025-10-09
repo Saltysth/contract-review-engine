@@ -1,80 +1,96 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 重试策略值对象
  * 
  * @author SaltyFish
  */
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RetryPolicy {
     
-    int maxRetries;
-    long initialDelayMs;
-    long maxDelayMs;
-    double backoffMultiplier;
-    boolean exponentialBackoff;
+    /**
+     * 最大重试次数
+     */
+    @Builder.Default
+    private Integer maxRetries = 3;
     
-    // 兼容性字段
-    public java.time.Duration getRetryInterval() {
-        return java.time.Duration.ofMillis(initialDelayMs);
-    }
+    /**
+     * 重试间隔（毫秒）
+     */
+    @Builder.Default
+    private Long retryIntervalMs = 1000L;
+
+
+    /**
+     * 已重试次数
+     */
+    @Builder.Default
+    private Integer retryCount = 0;
+
+    /**
+     * 是否启用指数退避
+     */
+    @Builder.Default
+    private Boolean exponentialBackoff = false;
     
-    public RetryPolicy(int maxRetries, long initialDelayMs, long maxDelayMs, 
-                      double backoffMultiplier, boolean exponentialBackoff) {
-        if (maxRetries < 0) {
-            throw new IllegalArgumentException("最大重试次数不能为负数");
-        }
-        if (initialDelayMs < 0) {
-            throw new IllegalArgumentException("初始延迟时间不能为负数");
-        }
-        if (maxDelayMs < initialDelayMs) {
-            throw new IllegalArgumentException("最大延迟时间不能小于初始延迟时间");
-        }
-        if (backoffMultiplier <= 0) {
-            throw new IllegalArgumentException("退避倍数必须大于0");
-        }
-        
-        this.maxRetries = maxRetries;
-        this.initialDelayMs = initialDelayMs;
-        this.maxDelayMs = maxDelayMs;
-        this.backoffMultiplier = backoffMultiplier;
-        this.exponentialBackoff = exponentialBackoff;
-    }
+    /**
+     * 退避倍数
+     */
+    @Builder.Default
+    private Double backoffMultiplier = 2.0;
+    
+    /**
+     * 最大重试间隔（毫秒）
+     */
+    @Builder.Default
+    private Long maxRetryIntervalMs = 30000L;
     
     /**
      * 创建默认重试策略
      */
     public static RetryPolicy defaultPolicy() {
-        return new RetryPolicy(3, 1000, 30000, 2.0, true);
+        return RetryPolicy.builder()
+                .maxRetries(3)
+                .retryCount(0)
+                .retryIntervalMs(1000L)
+                .exponentialBackoff(false)
+                .backoffMultiplier(2.0)
+                .maxRetryIntervalMs(30000L)
+                .build();
     }
     
     /**
      * 创建无重试策略
      */
     public static RetryPolicy noRetry() {
-        return new RetryPolicy(0, 0, 0, 1.0, false);
+        return RetryPolicy.builder()
+                .maxRetries(0)
+                .retryCount(0)
+                .retryIntervalMs(0L)
+                .exponentialBackoff(false)
+                .build();
     }
     
     /**
-     * 计算重试延迟时间
+     * 计算下一次重试间隔
      */
-    public long calculateDelay(int retryCount) {
+    public long calculateRetryInterval(int currentRetryCount) {
         if (!exponentialBackoff) {
-            return initialDelayMs;
+            return retryIntervalMs;
         }
         
-        long delay = (long) (initialDelayMs * Math.pow(backoffMultiplier, retryCount));
-        return Math.min(delay, maxDelayMs);
-    }
-    
-    /**
-     * 检查是否可以重试
-     */
-    public boolean canRetry(int currentRetryCount) {
-        return currentRetryCount < maxRetries;
+        long interval = (long) (retryIntervalMs * Math.pow(backoffMultiplier, currentRetryCount));
+        return Math.min(interval, maxRetryIntervalMs);
     }
 }

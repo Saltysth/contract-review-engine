@@ -32,8 +32,8 @@ public interface ReviewResultRepository extends JpaRepository<ReviewResult, Task
     /**
      * 查找指定时间范围内的结果
      */
-    @Query("SELECT rr FROM ReviewResult rr WHERE rr.createdAt BETWEEN :startTime AND :endTime")
-    List<ReviewResult> findByCreatedAtBetween(@Param("startTime") LocalDateTime startTime, 
+    @Query("SELECT rr FROM ReviewResult rr WHERE rr.createdTime BETWEEN :startTime AND :endTime")
+    List<ReviewResult> findBycreatedTimeBetween(@Param("startTime") LocalDateTime startTime, 
                                             @Param("endTime") LocalDateTime endTime);
     
     /**

@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 审查管道主控制器
@@ -30,7 +29,7 @@ public class ReviewPipeline {
         ReviewResult.ReviewResultBuilder resultBuilder = ReviewResult.builder()
                 .taskId(contractTask.getId());
         
-        ExecutionStage currentStage = ExecutionStage.RULE_EXECUTION;
+        ExecutionStage currentStage = ExecutionStage.CLAUSE_EXTRACTION; // TODO
         
         try {
             for (PipelineStage stage : stages) {

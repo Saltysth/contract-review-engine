@@ -1,5 +1,8 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,45 +17,32 @@ import java.util.Map;
  * @author SaltyFish
  */
 @Data
-@NoArgsConstructor(force = true)
 @Builder
+@NoArgsConstructor(force = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TaskConfiguration {
-    
-    Map<String, Object> reviewRules;
-    String promptTemplate;
+    @Schema(description = "重试策略")
     RetryPolicy retryPolicy;
+    @Schema(description = "超时时间（秒）")
     Integer timeoutSeconds;
+    @Schema(description = "优先级")
     Integer priority;
+    @Schema(description = "并发数")
+    Integer concurrency;
+    @Schema(description = "自定义设置")
     Map<String, Object> customSettings;
     
-    public TaskConfiguration(Map<String, Object> reviewRules, 
-                           String promptTemplate,
-                           RetryPolicy retryPolicy,
+    public TaskConfiguration(RetryPolicy retryPolicy,
                            Integer timeoutSeconds,
                            Integer priority,
+                           Integer concurrency,
                            Map<String, Object> customSettings) {
-        this.reviewRules = reviewRules != null ? new HashMap<>(reviewRules) : new HashMap<>();
-        this.promptTemplate = promptTemplate;
         this.retryPolicy = retryPolicy != null ? retryPolicy : RetryPolicy.defaultPolicy();
         this.timeoutSeconds = timeoutSeconds != null ? timeoutSeconds : 3600;
         this.priority = priority != null ? priority : 0;
         this.customSettings = customSettings != null ? new HashMap<>(customSettings) : new HashMap<>();
     }
-    
-    /**
-     * 获取规则值
-     */
-    public Object getRuleValue(String ruleKey) {
-        return reviewRules.get(ruleKey);
-    }
-    
-    /**
-     * 检查是否包含规则
-     */
-    public boolean hasRule(String ruleKey) {
-        return reviewRules.containsKey(ruleKey);
-    }
-    
+
     /**
      * 获取自定义设置值
      */

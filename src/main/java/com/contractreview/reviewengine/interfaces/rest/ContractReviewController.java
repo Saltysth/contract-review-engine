@@ -41,10 +41,8 @@ public class ContractReviewController {
         ContractTask contractTask = contractReviewService.createContractReviewTask(
                 request.getContractId(),
                 request.getFilePath(),
-                request.getFileHash(),
                 request.getReviewType(),
-                ContractTaskMapper.INSTANCE.toTaskConfiguration(request),
-                request.getMetadata()
+                ContractTaskMapper.INSTANCE.toTaskConfiguration(request)
         );
         
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractTask));

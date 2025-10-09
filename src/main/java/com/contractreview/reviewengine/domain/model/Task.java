@@ -1,8 +1,10 @@
 package com.contractreview.reviewengine.domain.model;
 
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
+import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -14,6 +16,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -51,41 +55,34 @@ public class Task {
     @Column(name = "task_status", nullable = false)
     @Builder.Default
     private TaskStatus status = TaskStatus.PENDING;
-    
-    @Column(name = "priority")
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "current_stage", nullable = false)
     @Builder.Default
-    private Integer priority = 0;
-    
-    @Column(name = "retry_count")
+    private ExecutionStage currentStage = ExecutionStage.CONTRACT_CLASSIFICATION;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "configuration", columnDefinition = "jsonb")
     @Builder.Default
-    private Integer retryCount = 0;
+    private TaskConfiguration configuration = new TaskConfiguration();
+
+    @Column(name = "error_message", columnDefinition = "TEXT")
+    private String errorMessage;
+
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
     
-    @Column(name = "max_retries")
-    @Builder.Default
-    private Integer maxRetries = 3;
-    
-    @Column(name = "timeout_seconds")
-    @Builder.Default
-    private Long timeoutSeconds = 3600L;
-    
-    @Column(name = "started_at")
-    private LocalDateTime startedAt;
-    
-    @Column(name = "completed_at")
+    @Column(name = "end_time")
     private LocalDateTime completedAt;
     
     @Embedded
     private AuditInfo auditInfo;
     
-    protected Task(String taskName, TaskType taskType, Integer priority, Long createdBy) {
+    protected Task(String taskName, TaskType taskType, Long createdBy) {
         this.taskName = taskName;
         this.taskType = taskType;
         this.status = TaskStatus.PENDING;
-        this.priority = priority != null ? priority : 0;
         this.auditInfo = AuditInfo.create(createdBy);
-        this.retryCount = 0;
-        this.maxRetries = 3;
-        this.timeoutSeconds = 3600L;
     }
     
     /**
@@ -112,7 +109,7 @@ public class Task {
     public void start() {
         validateStatusTransition(TaskStatus.RUNNING);
         this.status = TaskStatus.RUNNING;
-        this.startedAt = LocalDateTime.now();
+        this.startTime = LocalDateTime.now();
         updateAuditInfo();
     }
     
@@ -136,36 +133,36 @@ public class Task {
     }
     
     /**
-     * 重试任务
+     * 重试任务 TODO move
      */
     public void retry() {
         if (!canRetry()) {
             throw new IllegalStateException("任务不能重试: 已达到最大重试次数");
         }
         
-        this.retryCount++;
+//        this.retryCount++;
         this.status = TaskStatus.PENDING;
-        this.startedAt = null;
+        this.startTime = null;
         this.completedAt = null;
         updateAuditInfo();
     }
     
     /**
-     * 检查是否可以重试
+     * 检查是否可以重试 TODO move
      */
     public boolean canRetry() {
-        return this.status == TaskStatus.FAILED && this.retryCount < this.maxRetries;
+        return this.status == TaskStatus.FAILED;
     }
     
     /**
-     * 检查是否超时
+     * 检查是否超时 TODO move
      */
     public boolean isTimeout() {
-        if (this.startedAt == null || this.status != TaskStatus.RUNNING) {
+        if (this.startTime == null || this.status != TaskStatus.RUNNING) {
             return false;
         }
-        
-        LocalDateTime timeoutTime = this.startedAt.plusSeconds(this.timeoutSeconds);
+
+        LocalDateTime timeoutTime = this.startTime.plusSeconds(this.configuration.getTimeoutSeconds());
         return LocalDateTime.now().isAfter(timeoutTime);
     }
     
@@ -216,12 +213,6 @@ public class Task {
         };
     }
     
-    /**
-     * 添加元数据
-     */
-    public void addMetadata(String key, Object value) {
-        updateAuditInfo();
-    }
 
     /**
      * 更新审计信息

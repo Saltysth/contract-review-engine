@@ -81,6 +81,6 @@ public class ReviewProgress {
      * 创建初始进度
      */
     public static ReviewProgress initial() {
-        return new ReviewProgress(ExecutionStage.PENDING, 0);
+        return new ReviewProgress(ExecutionStage.CONTRACT_CLASSIFICATION, 0);
     }
 }

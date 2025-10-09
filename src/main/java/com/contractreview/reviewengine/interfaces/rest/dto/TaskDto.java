@@ -1,14 +1,14 @@
 package com.contractreview.reviewengine.interfaces.rest.dto;
 
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
-import com.contractreview.reviewengine.domain.enums.TaskType;
-import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
+import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,23 +26,23 @@ import java.time.LocalDateTime;
 @Schema(description = "任务信息")
 public class TaskDto {
     
-    @Schema(description = "任务ID", example = "550e8400-e29b-41d4-a716-446655440000")
+    @Schema(description = "任务ID", example = "55446655440000")
     private String id;
+
+    @Column(name = "task_name", nullable = false)
+    private String taskName;
     
     @Schema(description = "任务类型")
     private TaskType taskType;
     
-    @Schema(description = "任务状态")
+    @Schema(description = "任务状态(这个阶段的执行进度)")
     private TaskStatus status;
-    
+
     @Schema(description = "当前执行阶段")
     private ExecutionStage currentStage;
-    
+
     @Schema(description = "任务配置")
     private TaskConfiguration configuration;
-    
-    @Schema(description = "重试次数", example = "0")
-    private Integer retryCount;
     
     @Schema(description = "错误信息")
     private String errorMessage;
@@ -55,11 +55,9 @@ public class TaskDto {
     
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdTime;
     
     @Schema(description = "更新时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
-    
-
+    private LocalDateTime updatedTime;
 }

@@ -1,10 +1,7 @@
 package com.contractreview.reviewengine.config;
 
 import com.contractreview.reviewengine.infrastructure.pipeline.PipelineStage;
-import com.contractreview.reviewengine.infrastructure.pipeline.stages.AnalysisStage;
 import com.contractreview.reviewengine.infrastructure.pipeline.stages.ExtractionStage;
-import com.contractreview.reviewengine.infrastructure.pipeline.stages.ParsingStage;
-import com.contractreview.reviewengine.infrastructure.pipeline.stages.RiskAssessmentStage;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,16 +18,10 @@ public class PipelineConfiguration {
      */
     @Bean
     public List<PipelineStage> pipelineStages(
-            ParsingStage parsingStage,
-            ExtractionStage extractionStage,
-            AnalysisStage analysisStage,
-            RiskAssessmentStage riskAssessmentStage) {
+            ExtractionStage extractionStage) {
         
         return List.of(
-                parsingStage,
-                extractionStage,
-                analysisStage,
-                riskAssessmentStage
+                extractionStage
         );
     }
 }

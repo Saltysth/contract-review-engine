@@ -24,7 +24,7 @@ public class ExtractionStage implements PipelineStage {
     
     @Override
     public ExecutionStage getStage() {
-        return ExecutionStage.CONTRACT_EXTRACTION;
+        return ExecutionStage.CLAUSE_EXTRACTION;
     }
     
     @Override
@@ -41,7 +41,7 @@ public class ExtractionStage implements PipelineStage {
             List<Map<String, Object>> extractedClauses = extractClauses(contractTask);
             
             return StageResult.builder()
-                    .stage(ExecutionStage.CONTRACT_EXTRACTION)
+                    .stage(ExecutionStage.CLAUSE_EXTRACTION)
                     .success(true)
                     .startTime(LocalDateTime.now().minusSeconds(10))
                     .endTime(LocalDateTime.now())
@@ -52,7 +52,7 @@ public class ExtractionStage implements PipelineStage {
             log.error("Clause extraction failed for task: {}", contractTask.getId(), e);
             
             return StageResult.builder()
-                    .stage(ExecutionStage.CONTRACT_EXTRACTION)
+                    .stage(ExecutionStage.CLAUSE_EXTRACTION)
                     .success(false)
                     .startTime(LocalDateTime.now().minusSeconds(10))
                     .endTime(LocalDateTime.now())

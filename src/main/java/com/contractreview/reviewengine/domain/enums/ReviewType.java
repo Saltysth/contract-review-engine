@@ -1,17 +1,18 @@
 package com.contractreview.reviewengine.domain.enums;
 
+import lombok.Getter;
+
 /**
  * 审查类型枚举
  * 
  * @author SaltyFish
  */
+@Getter
 public enum ReviewType {
     
-    FULL_REVIEW("全面审查", "对合同进行全面的风险评估和条款分析"),
-    RISK_ASSESSMENT("风险评估", "重点关注合同中的风险条款"),
-    COMPLIANCE_CHECK("合规检查", "检查合同是否符合相关法规要求"),
-    CLAUSE_ANALYSIS("条款分析", "分析特定条款的内容和影响"),
-    CUSTOM("自定义审查", "根据用户配置进行定制化审查");
+    FULL_REVIEW("全量审查", "审查所有选中的条款项目，适用于重要合同"),
+    RISK_ASSESSMENT("部分审查", "仅审查核心风险项目，适合常规合同"),
+    CUSTOM("个性化审查", "自定义选择具体的审查项目");
     
     private final String displayName;
     private final String description;
@@ -21,25 +22,18 @@ public enum ReviewType {
         this.description = description;
     }
     
-    public String getDisplayName() {
-        return displayName;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
-    
+
     /**
      * 是否需要全面分析
      */
     public boolean requiresFullAnalysis() {
-        return this == FULL_REVIEW || this == COMPLIANCE_CHECK;
+        return this == FULL_REVIEW;
     }
     
     /**
      * 是否关注风险评估
      */
     public boolean focusOnRisk() {
-        return this == FULL_REVIEW || this == RISK_ASSESSMENT;
+        return this == FULL_REVIEW;
     }
 }

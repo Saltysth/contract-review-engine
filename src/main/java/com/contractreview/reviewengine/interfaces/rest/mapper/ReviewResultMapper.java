@@ -18,7 +18,7 @@ public interface ReviewResultMapper {
      * Domain对象转DTO
      */
     @Mapping(target = "taskId", source = "taskId", qualifiedByName = "taskIdToString")
-    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "createdTime", source = "createdTime")
     @Mapping(target = "summary", source = "summary")
     ReviewResultDto toDto(ReviewResult reviewResult);
     

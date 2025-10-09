@@ -1,12 +1,19 @@
 package com.contractreview.reviewengine.domain.model;
 
 import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -65,13 +72,13 @@ public class ReviewResult {
     @Convert(converter = JsonConverter.class)
     private Map<String, Object> complianceIssues;
     
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_time", nullable = false, updatable = false)
+    private LocalDateTime createdTime;
     
     @PrePersist
     protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+        if (createdTime == null) {
+            createdTime = LocalDateTime.now();
         }
     }
     
@@ -83,7 +90,7 @@ public class ReviewResult {
                 .taskId(taskId)
                 .contractId(contractId)
                 .reviewType(reviewType)
-                .createdAt(LocalDateTime.now())
+                .createdTime(LocalDateTime.now())
                 .build();
     }
 }

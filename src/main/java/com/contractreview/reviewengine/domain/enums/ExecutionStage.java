@@ -9,24 +9,20 @@ import lombok.Getter;
  */
 @Getter
 public enum ExecutionStage {
-    
-    PENDING("待处理", "等待开始处理", 0),
-    DOCUMENT_PARSING("文档解析", "解析合同文档内容", 10),
-    CONTRACT_EXTRACTION("合同提取", "提取合同关键信息", 30),
-    CONTENT_ANALYSIS("内容分析", "分析合同条款内容", 60),
-    RISK_EVALUATION("风险评估", "评估合同风险等级", 80),
-    RULE_EXECUTION("规则执行", "执行业务规则", 90),
-    COMPLETED("已完成", "所有阶段执行完成", 100),
-    FAILED("执行失败", "执行过程中出现错误", -1);
+
+    CONTRACT_CLASSIFICATION("合同分类"),
+    CLAUSE_EXTRACTION("条款抽取"),
+    KNOWLEDGE_MATCHING("知识库匹配"),
+    RULE_MATCHING("规则匹配"),
+    MODEL_REVIEW("模型审查"),
+    RESULT_VALIDATION("结果校验"),
+    REPORT_GENERATION("报告生成"),
+    REVIEW_COMPLETED("审查完毕");
     
     private final String displayName;
-    private final String description;
-    private final int defaultProgress;
-    
-    ExecutionStage(String displayName, String description, int defaultProgress) {
+
+    ExecutionStage(String displayName) {
         this.displayName = displayName;
-        this.description = description;
-        this.defaultProgress = defaultProgress;
     }
     
     /**
@@ -42,6 +38,6 @@ public enum ExecutionStage {
      * 是否为最终阶段
      */
     public boolean isFinalStage() {
-        return this == COMPLETED;
+        return this == REVIEW_COMPLETED;
     }
 }

@@ -3,7 +3,6 @@ package com.contractreview.reviewengine.domain.valueobject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -17,25 +16,29 @@ import java.time.LocalDateTime;
 @Embeddable
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class AuditInfo {
 
     @Column(name = "created_by")
     Long createdBy;
     
-    @Column(name = "created_at")
-    LocalDateTime createdAt;
+    @Column(name = "created_time")
+    LocalDateTime createdTime;
     
     @Column(name = "updated_by")
     Long updatedBy;
     
-    @Column(name = "updated_at")
-    LocalDateTime updatedAt;
+    @Column(name = "updated_time")
+    LocalDateTime updatedTime;
+
+    @Column(name = "object_version_number")
+    Long objectVersionNumber;
     
-    public AuditInfo(Long createdBy, LocalDateTime createdAt, Long updatedBy, LocalDateTime updatedAt) {
+    public AuditInfo(Long createdBy, LocalDateTime createdTime, Long updatedBy, LocalDateTime updatedTime) {
         this.createdBy = createdBy;
-        this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
+        this.createdTime = createdTime != null ? createdTime : LocalDateTime.now();
         this.updatedBy = updatedBy;
-        this.updatedAt = updatedAt != null ? updatedAt : LocalDateTime.now();
+        this.updatedTime = updatedTime != null ? updatedTime : LocalDateTime.now();
     }
     
     /**
@@ -50,6 +53,6 @@ public class AuditInfo {
      * 更新审计信息
      */
     public AuditInfo update(Long userId) {
-        return new AuditInfo(this.createdBy, this.createdAt, userId, LocalDateTime.now());
+        return new AuditInfo(this.createdBy, this.createdTime, userId, LocalDateTime.now());
     }
 }

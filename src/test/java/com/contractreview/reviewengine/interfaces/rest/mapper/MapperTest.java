@@ -23,7 +23,6 @@ class MapperTest {
         ContractReviewRequestDto request = ContractReviewRequestDto.builder()
                 .contractId(1L)
                 .filePath("/contracts/test.pdf")
-                .fileHash("sha256:abc123")
                 .reviewType(ReviewType.FULL_REVIEW)
                 .priority(8)
                 .timeoutMinutes(45)
@@ -39,7 +38,7 @@ class MapperTest {
         assertThat(taskConfiguration.getPriority()).isEqualTo(8);
         assertThat(taskConfiguration.getTimeout()).isEqualTo(java.time.Duration.ofMinutes(45));
         assertThat(taskConfiguration.getRetryPolicy().getMaxRetries()).isEqualTo(5);
-        assertThat(taskConfiguration.getRetryPolicy().getRetryInterval())
-                .isEqualTo(java.time.Duration.ofSeconds(120));
+        assertThat(taskConfiguration.getRetryPolicy().getRetryIntervalMs())
+                .isEqualTo(120 * 1000);
     }
 }

@@ -1,7 +1,6 @@
 package com.contractreview.reviewengine.interfaces.rest.mapper;
 
 import com.contractreview.reviewengine.domain.model.Task;
-import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskDto;
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
@@ -18,8 +17,8 @@ public interface TaskMapper {
      * Domain对象转DTO
      */
     @Mapping(target = "id", source = "id", qualifiedByName = "taskIdToString")
-    @Mapping(target = "createdAt", source = "auditInfo.createdAt")
-    @Mapping(target = "updatedAt", source = "auditInfo.updatedAt")
+    @Mapping(target = "createdTime", source = "auditInfo.createdTime")
+    @Mapping(target = "updatedTime", source = "auditInfo.updatedTime")
     TaskDto toDto(Task task);
     
     /**
