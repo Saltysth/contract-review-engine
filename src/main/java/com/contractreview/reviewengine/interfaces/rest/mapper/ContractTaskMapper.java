@@ -36,10 +36,10 @@ public interface ContractTaskMapper {
     TaskConfiguration toTaskConfiguration(ContractReviewRequestDto dto);
     
     /**
-     * TaskId转字符串
+     * TaskId转字符串 - ContractTask专用
      */
-    @Named("taskIdToString")
-    default String taskIdToString(Long taskId) {
+    @Named("contractTaskIdToString")
+    default String contractTaskIdToString(Long taskId) {
         return taskId != null ? taskId.toString() : null;
     }
     

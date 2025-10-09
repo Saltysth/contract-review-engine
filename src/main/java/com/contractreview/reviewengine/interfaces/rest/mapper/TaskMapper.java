@@ -16,7 +16,7 @@ public interface TaskMapper {
     /**
      * Domain对象转DTO
      */
-    @Mapping(target = "id", source = "id", qualifiedByName = "taskIdToString")
+    @Mapping(target = "id", source = "id", qualifiedByName = "baseTaskIdToString")
     @Mapping(target = "createdTime", source = "auditInfo.createdTime")
     @Mapping(target = "updatedTime", source = "auditInfo.updatedTime")
     TaskDto toDto(Task task);
@@ -24,23 +24,23 @@ public interface TaskMapper {
     /**
      * DTO转Domain对象
      */
-    @Mapping(target = "id", source = "id", qualifiedByName = "stringToTaskId")
+    @Mapping(target = "id", source = "id", qualifiedByName = "baseStringToTaskId")
     @Mapping(target = "auditInfo", ignore = true)
     Task toEntity(TaskDto dto);
     
     /**
-     * TaskId转字符串
+     * TaskId转字符串 - Task专用
      */
-    @Named("taskIdToString")
-    default String taskIdToString(Long taskId) {
+    @Named("baseTaskIdToString")
+    default String baseTaskIdToString(Long taskId) {
         return taskId != null ? taskId.toString() : null;
     }
     
     /**
-     * 字符串转TaskId
+     * 字符串转TaskId - Task专用
      */
-    @Named("stringToTaskId")
-    default Long stringToTaskId(String id) {
+    @Named("baseStringToTaskId")
+    default Long baseStringToTaskId(String id) {
         return id != null ? Long.valueOf(id) : null;
     }
 }
