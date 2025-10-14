@@ -1,8 +1,8 @@
 package com.contractreview.reviewengine.domain.repository;
 
+import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
-import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

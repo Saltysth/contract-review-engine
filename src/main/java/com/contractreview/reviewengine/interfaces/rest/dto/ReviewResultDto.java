@@ -1,7 +1,6 @@
 package com.contractreview.reviewengine.interfaces.rest.dto;
 
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
-import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import com.contractreview.reviewengine.domain.valueobject.RiskAssessment;
 import com.fasterxml.jackson.annotation.JsonFormat;

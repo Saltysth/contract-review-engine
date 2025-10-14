@@ -1,18 +1,11 @@
 package com.contractreview.reviewengine.infrastructure.persistence.converter;
 
-import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
-import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
 import com.contractreview.reviewengine.domain.model.ContractReview;
-import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import com.contractreview.reviewengine.domain.valueobject.ContractMetadata;
 import com.contractreview.reviewengine.domain.valueobject.ReviewConfiguration;
 import com.contractreview.reviewengine.infrastructure.persistence.entity.ContractTaskEntity;
 import com.contractreview.reviewengine.infrastructure.persistence.projection.ContractTaskProjection;
 import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.util.List;
 
 /**
  * 合同审查转换器

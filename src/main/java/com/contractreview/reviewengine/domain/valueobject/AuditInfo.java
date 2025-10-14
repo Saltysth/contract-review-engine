@@ -1,11 +1,11 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
 import java.time.LocalDateTime;
 
 /**

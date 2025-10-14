@@ -2,12 +2,11 @@ package com.contractreview.reviewengine.interfaces.rest.dto;
 
 import com.contractreview.reviewengine.domain.enums.ReviewType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import jakarta.validation.constraints.NotBlank;
 
 /**
  * 合同审查请求DTO

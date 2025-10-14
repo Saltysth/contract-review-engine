@@ -4,7 +4,9 @@ import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 /**

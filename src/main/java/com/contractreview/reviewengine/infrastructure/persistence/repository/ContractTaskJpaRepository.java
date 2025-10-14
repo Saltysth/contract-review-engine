@@ -1,8 +1,6 @@
 package com.contractreview.reviewengine.infrastructure.persistence.repository;
 
 import com.contractreview.reviewengine.infrastructure.persistence.entity.ContractTaskEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

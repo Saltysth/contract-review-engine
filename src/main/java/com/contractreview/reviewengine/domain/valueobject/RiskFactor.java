@@ -3,8 +3,6 @@ package com.contractreview.reviewengine.domain.valueobject;
 import lombok.Builder;
 import lombok.Value;
 
-import java.math.BigDecimal;
-
 /**
  * 风险因子值对象
  * 

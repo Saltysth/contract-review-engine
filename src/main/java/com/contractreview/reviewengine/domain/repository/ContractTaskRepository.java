@@ -2,8 +2,6 @@ package com.contractreview.reviewengine.domain.repository;
 
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.TaskId;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -2,7 +2,9 @@ package com.contractreview.reviewengine.interfaces.rest.mapper;
 
 import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskDto;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import org.mapstruct.factory.Mappers;
 
 /**

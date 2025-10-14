@@ -5,13 +5,18 @@ import com.contractreview.reviewengine.domain.enums.ReviewType;
 import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import com.contractreview.reviewengine.infrastructure.converter.StringListConverter;
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Cleanup;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 

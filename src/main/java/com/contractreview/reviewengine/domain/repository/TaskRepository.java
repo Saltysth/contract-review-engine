@@ -1,9 +1,9 @@
 package com.contractreview.reviewengine.domain.repository;
 
-import com.contractreview.reviewengine.domain.model.Task;
-import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
+import com.contractreview.reviewengine.domain.model.Task;
+import com.contractreview.reviewengine.domain.model.TaskId;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

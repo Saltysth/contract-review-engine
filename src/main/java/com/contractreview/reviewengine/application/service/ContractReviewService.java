@@ -2,16 +2,15 @@ package com.contractreview.reviewengine.application.service;
 
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
+import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
-import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
 import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

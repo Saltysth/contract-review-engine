@@ -1,9 +1,9 @@
 package com.contractreview.reviewengine.application.service;
 
-import com.contractreview.reviewengine.domain.model.Task;
-import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
+import com.contractreview.reviewengine.domain.model.Task;
+import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import lombok.RequiredArgsConstructor;
