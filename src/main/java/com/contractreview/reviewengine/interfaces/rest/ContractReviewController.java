@@ -56,7 +56,7 @@ public class ContractReviewController {
     public ResponseEntity<ContractTaskDto> updateReviewTask(@PathVariable Long contractId,
                                                             @Valid @RequestBody ContractReviewRequestDto requestDto) {
 
-        ContractReview contractReview = contractReviewService.updateContractReviewTask(contractId);
+        ContractReview contractReview = contractReviewService.updateContractReviewTask(contractId, requestDto);
 
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
     }

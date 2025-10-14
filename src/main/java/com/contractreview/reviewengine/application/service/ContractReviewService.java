@@ -8,7 +8,10 @@ import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
 import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
+import com.contractreview.reviewengine.domain.service.TaskManagementService;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,7 @@ public class ContractReviewService {
     private static final int ONE = 1;
     private final ContractFeignClient contractFeignClient;
 
-    private final TaskService taskService;
+    private final TaskManagementService taskManagementService;
     private final ContractReviewRepository contractReviewRepository;
     private final ReviewResultRepository reviewResultRepository;
     
@@ -40,7 +43,7 @@ public class ContractReviewService {
         ContractFeignDTO contract = contractFeignClient.getContractById(contractId);
 
         // 创建基础任务
-        var task = taskService.createTask(TaskType.CLASSIFICATION, TaskConfiguration.defaultTaskConfiguration());
+        var task = taskManagementService.createTask(TaskType.CLASSIFICATION, TaskConfiguration.defaultTaskConfiguration());
 
         // 创建合同审查
         ContractReview contractReview = ContractReview.create(
@@ -88,10 +91,10 @@ public class ContractReviewService {
     public ReviewResult saveReviewResult(ReviewResult reviewResult) {
         ReviewResult savedResult = reviewResultRepository.save(reviewResult);
         log.info("Saved review result for task: {}", reviewResult.getTaskId());
-        
+
         // 更新任务状态为完成
-        taskService.completeTask(reviewResult.getTaskId());
-        
+        taskManagementService.completeTask(TaskId.of(reviewResult.getTaskId()));
+
         return savedResult;
     }
     
@@ -108,32 +111,38 @@ public class ContractReviewService {
      */
     public void startContractReview(TaskId taskId) {
         ContractReview contractReview = getContractTask(taskId);
-        taskService.startTask(taskId);
+        taskManagementService.startTask(taskId);
 
         // TODO: 发送消息到审查管道
         log.info("Started contract review for task: {}", taskId);
     }
-    
+
     /**
      * 处理审查失败
      */
     public void handleReviewFailure(TaskId taskId, String errorMessage) {
-        taskService.failTask(taskId, errorMessage);
-        
+        taskManagementService.failTask(taskId, errorMessage);
+
         // TODO: 发送失败通知
         log.error("Contract review failed for task: {} - {}", taskId, errorMessage);
     }
 
     public Boolean deleteContractReviewTask(Long contractTaskId) {
         // 查询主数据的task
+        Optional<ContractReview> contractReview = contractReviewRepository.findById(TaskId.of(contractTaskId));
 
-        // 删除task任务，外键会关联删除contractTask
-//        int count = taskService.deleteTaskById(taskId);
-//        return ONE == count;
-        return true;
+        // 如果不存在，直接返回false
+        if (contractReview.isEmpty()) {
+            return false;
+        }
+
+        // 如果存在，执行删除并返回删除结果
+        ContractReview mainTask = contractReview.get();
+        return taskManagementService.deleteTask(TaskId.of(mainTask.getTaskId()));
     }
 
-    public ContractReview updateContractReviewTask(Long contractId) {
+    public ContractReview updateContractReviewTask(Long contractId, @Valid ContractReviewRequestDto requestDto) {
+
         return null;
     }
 }
