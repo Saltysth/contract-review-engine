@@ -43,6 +43,15 @@ public class TaskConfiguration {
         this.customSettings = customSettings != null ? new HashMap<>(customSettings) : new HashMap<>();
     }
 
+    public static TaskConfiguration defaultTaskConfiguration() {
+        return TaskConfiguration.builder()
+                .retryPolicy(RetryPolicy.defaultPolicy())
+                .timeoutSeconds(3600)
+                .priority(0)
+                .customSettings(new HashMap<>())
+                .build();
+    }
+
     /**
      * 获取自定义设置值
      */

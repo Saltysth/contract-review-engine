@@ -1,6 +1,6 @@
 package com.contractreview.reviewengine.interfaces.rest.mapper;
 
-import com.contractreview.reviewengine.domain.model.ContractTask;
+import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
@@ -19,12 +19,12 @@ public interface ContractTaskMapper {
      * Domain对象转DTO
      */
     @Mapping(target = "reviewRules",  ignore = true)
-    ContractTaskDto toDto(ContractTask contractTask);
-    
+    ContractTaskDto toDto(ContractReview contractReview);
+
     /**
      * 请求DTO转Domain对象（用于创建）
      */
-    ContractTask toEntity(ContractReviewRequestDto dto);
+    ContractReview toEntity(ContractReviewRequestDto dto);
     
     /**
      * 请求DTO转任务配置
@@ -63,7 +63,8 @@ public interface ContractTaskMapper {
      * 构建重试策略
      */
     @Named("buildRetryPolicy")
-    default com.contractreview.reviewengine.domain.valueobject.RetryPolicy buildRetryPolicy(ContractReviewRequestDto dto) {
+    default com.contractreview.reviewengine.domain.valueobject.RetryPolicy buildRetryPolicy(
+        ContractReviewRequestDto dto) {
         if (dto == null) {
             return com.contractreview.reviewengine.domain.valueobject.RetryPolicy.defaultPolicy();
         }

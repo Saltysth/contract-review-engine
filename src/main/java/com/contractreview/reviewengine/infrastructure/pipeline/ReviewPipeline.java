@@ -1,7 +1,7 @@
 package com.contractreview.reviewengine.infrastructure.pipeline;
 
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
-import com.contractreview.reviewengine.domain.model.ContractTask;
+import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.valueobject.StageResult;
 import lombok.RequiredArgsConstructor;
@@ -23,24 +23,24 @@ public class ReviewPipeline {
     /**
      * 执行完整的审查管道
      */
-    public ReviewResult execute(ContractTask contractTask) {
-        log.info("Starting review pipeline for task: {}", contractTask.getId());
-        
+    public ReviewResult execute(ContractReview contractReview) {
+        log.info("Starting review pipeline for task: {}", contractReview.getId());
+
         ReviewResult.ReviewResultBuilder resultBuilder = ReviewResult.builder()
-                .taskId(contractTask.getId());
+                .taskId(contractReview.getId());
         
         ExecutionStage currentStage = ExecutionStage.CLAUSE_EXTRACTION; // TODO
         
         try {
             for (PipelineStage stage : stages) {
                 if (stage.getStage() == currentStage) {
-                    log.info("Executing stage: {} for task: {}", currentStage, contractTask.getId());
-                    
-                    StageResult stageResult = stage.execute(contractTask, resultBuilder.build());
-                    
+                    log.info("Executing stage: {} for task: {}", currentStage, contractReview.getId());
+
+                    StageResult stageResult = stage.execute(contractReview, resultBuilder.build());
+
                     if (!stageResult.isSuccess()) {
-                        log.error("Stage {} failed for task: {} - {}", 
-                                currentStage, contractTask.getId(), stageResult.getErrorMessage());
+                        log.error("Stage {} failed for task: {} - {}",
+                                currentStage, contractReview.getId(), stageResult.getErrorMessage());
                         
                         return resultBuilder
                                 .build();
@@ -56,14 +56,13 @@ public class ReviewPipeline {
             
             ReviewResult result = resultBuilder
                     .build();
-            
 
-            log.info("Review pipeline completed successfully for task: {}", contractTask.getId());
+            log.info("Review pipeline completed successfully for task: {}", contractReview.getId());
             return result;
-            
+
         } catch (Exception e) {
-            log.error("Review pipeline failed for task: {}", contractTask.getId(), e);
-            
+            log.error("Review pipeline failed for task: {}", contractReview.getId(), e);
+
             return resultBuilder
                     .build();
         }

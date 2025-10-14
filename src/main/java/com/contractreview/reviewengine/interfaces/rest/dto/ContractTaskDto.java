@@ -1,6 +1,5 @@
 package com.contractreview.reviewengine.interfaces.rest.dto;
 
-import com.contractreview.common.entity.PromptTemplate;
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
 import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;

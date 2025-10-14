@@ -1,17 +1,14 @@
-package com.contractreview.reviewengine.domain.model;
+package com.contractreview.reviewengine.infrastructure.persistence.entity;
 
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
 import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import com.contractreview.reviewengine.infrastructure.converter.StringListConverter;
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Cleanup;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -19,8 +16,8 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 合同审查任务实体
- * 
+ * 合同审查任务JPA实体
+ *
  * @author SaltyFish
  */
 @Entity
@@ -31,8 +28,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContractTask {
-    
+public class ContractTaskEntity {
+
     @Id
     @Column(nullable = false)
     private Long id;
@@ -42,7 +39,7 @@ public class ContractTask {
 
     @Column(name = "contract_id", nullable = false)
     private Long contractId;
-    
+
     @Column(name = "file_uuid", nullable = false, length = 50)
     private String fileUuid;
 
@@ -79,11 +76,11 @@ public class ContractTask {
     @Enumerated(EnumType.STRING)
     @Column(name = "prompt_template", length = 20)
     private PromptTemplateType promptTemplate;
-    
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "result_data", columnDefinition = "jsonb")
     private String resultData;
-    
+
     @Column(name = "enable_terminology")
     private Boolean enableTerminology;
 
@@ -93,60 +90,10 @@ public class ContractTask {
     /**
      * 构造函数
      */
-    public ContractTask(Long taskId, Long contractId, String fileUuid, ReviewType reviewType) {
+    public ContractTaskEntity(Long taskId, Long contractId, String fileUuid, ReviewType reviewType) {
         this.taskId = taskId;
         this.contractId = contractId;
         this.fileUuid = fileUuid;
         this.reviewType = reviewType;
     }
-    
-    /**
-     * 更新执行阶段 TODO move
-     */
-    public void updateExecutionStage(String stage) {
-//        this.executionStage = stage;
-    }
-
-
-    /**
-     * 更新审查规则
-     */
-    public void updateReviewRules(String rules) {
-        this.reviewRules = rules;
-    }
-    
-    /**
-     * 更新提示模板
-     */
-    public void updatePromptTemplate(PromptTemplateType template) {
-        this.promptTemplate = template;
-    }
-    
-    /**
-     * 更新结果数据
-     */
-    public void updateResultData(String data) {
-        this.resultData = data;
-    }
-//
-//    /**
-//     * 检查任务是否完成 TODO move
-//     */
-//    public boolean isCompleted() {
-//        return "COMPLETED".equals(this.executionStage);
-//    }
-//
-//    /**
-//     * 检查任务是否正在执行 TODO move
-//     */
-//    public boolean isExecuting() {
-//        return "EXECUTING".equals(this.executionStage);
-//    }
-//
-//    /**
-//     * 检查任务是否待处理 TODO move
-//     */
-//    public boolean isPending() {
-//        return "PENDING".equals(this.executionStage);
-//    }
 }

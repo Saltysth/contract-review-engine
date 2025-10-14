@@ -22,7 +22,7 @@ class MapperTest {
         // Given
         ContractReviewRequestDto request = ContractReviewRequestDto.builder()
                 .contractId(1L)
-                .filePath("/contracts/test.pdf")
+                .fileUuid("123123123")
                 .reviewType(ReviewType.FULL_REVIEW)
                 .priority(8)
                 .timeoutMinutes(45)

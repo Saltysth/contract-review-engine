@@ -1,8 +1,6 @@
 package com.contractreview.reviewengine.interfaces.rest.dto;
 
 import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.valueobject.RetryPolicy;
-import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,9 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import java.time.Duration;
-import java.util.Map;
 
 /**
  * 合同审查请求DTO
@@ -27,13 +22,12 @@ public class ContractReviewRequestDto {
     @NotBlank(message = "合同ID不能为空")
     @Schema(description = "合同ID", example = "CONTRACT-2024-001", required = true)
     private Long contractId;
-    
-    @NotBlank(message = "文件路径不能为空")
-    @Schema(description = "文件路径", example = "/contracts/2024/contract-001.pdf", required = true)
-    private String filePath;
-    
-    @NotNull(message = "审查类型不能为空")
-    @Schema(description = "审查类型", required = true)
+
+    @NotBlank(message = "文件路径uuid")
+    @Schema(description = "文件uuid", example = "127893217892", required = true)
+    private String fileUuid;
+
+    @Schema(description = "审查类型")
     private ReviewType reviewType;
     
     @Schema(description = "任务优先级", example = "5", minimum = "1", maximum = "10")

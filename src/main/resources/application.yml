@@ -7,7 +7,23 @@ server:
 spring:
   application:
     name: contract-review-engine
-  
+
+  # 服务发现配置
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER:localhost:18848}
+    openfeign:
+      client:
+        config:
+          contract-management-service:
+            # 连接超时
+            connectTimeout: 5000
+            # 读取超时
+            readTimeout: 10000
+            # 日志级别
+            loggerLevel: basic
+
   # 数据库配置
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres

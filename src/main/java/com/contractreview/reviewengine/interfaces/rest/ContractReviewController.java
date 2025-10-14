@@ -1,7 +1,8 @@
 package com.contractreview.reviewengine.interfaces.rest;
 
+import com.contract.common.feign.ContractFeignClient;
 import com.contractreview.reviewengine.application.service.ContractReviewService;
-import com.contractreview.reviewengine.domain.model.ContractTask;
+import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
@@ -27,25 +28,40 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Tag(name = "Contract Review", description = "合同审查API")
 public class ContractReviewController {
-    
     private final ContractReviewService contractReviewService;
     
     /**
      * 创建合同审查任务
      */
-    @PostMapping("/tasks")
+    @PostMapping("/tasks/{contractId}")
     @Operation(summary = "创建审查任务", description = "创建新的合同审查任务")
-    public ResponseEntity<ContractTaskDto> createReviewTask(
-            @Valid @RequestBody ContractReviewRequestDto request) {
-        
-        ContractTask contractTask = contractReviewService.createContractReviewTask(
-                request.getContractId(),
-                request.getFilePath(),
-                request.getReviewType(),
-                ContractTaskMapper.INSTANCE.toTaskConfiguration(request)
-        );
-        
-        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractTask));
+    public ResponseEntity<ContractTaskDto> createReviewTask(@PathVariable Long contractId) {
+
+        ContractReview contractReview = contractReviewService.createContractReviewTask(contractId);
+
+        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
+    }
+
+    /**
+     * 更新合同审查任务 TODO 这里设置type
+     */
+    @PutMapping("/tasks/{contractTaskId}")
+    @Operation(summary = "更新审查任务", description = "更新合同审查任务的信息")
+    public ResponseEntity<ContractTaskDto> updateReviewTask(@PathVariable Long contractId,
+                                                            @Valid @RequestBody ContractReviewRequestDto requestDto) {
+
+        ContractReview contractReview = contractReviewService.updateContractReviewTask(contractId);
+
+        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
+    }
+
+    /**
+     * 删除合同审查任务
+     */
+    @DeleteMapping("/tasks/{contractTaskId}")
+    @Operation(summary = "删除审查任务", description = "删除指定的合同审查任务")
+    public ResponseEntity<Boolean> deleteReviewTask(@PathVariable Long contractTaskId) {
+        return ResponseEntity.ok(contractReviewService.deleteContractReviewTask(contractTaskId));
     }
     
     /**
@@ -66,8 +82,8 @@ public class ContractReviewController {
     @Operation(summary = "获取任务详情", description = "获取合同审查任务的详细信息")
     public ResponseEntity<ContractTaskDto> getContractTask(@PathVariable Long taskId) {
         TaskId id = TaskId.of(taskId);
-        ContractTask contractTask = contractReviewService.getContractTask(id);
-        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractTask));
+        ContractReview contractReview = contractReviewService.getContractTask(id);
+        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
     }
     
     /**
@@ -93,12 +109,12 @@ public class ContractReviewController {
     @Operation(summary = "获取合同任务", description = "获取指定合同的所有审查任务")
     public ResponseEntity<List<ContractTaskDto>> getTasksByContractId(
             @PathVariable Long contractId) {
-        
-        List<ContractTask> tasks = contractReviewService.getTasksByContractId(contractId);
-        List<ContractTaskDto> taskDtos = tasks.stream()
+
+        List<ContractReview> reviews = contractReviewService.getTasksByContractId(contractId);
+        List<ContractTaskDto> taskDtos = reviews.stream()
                 .map(ContractTaskMapper.INSTANCE::toDto)
                 .toList();
-        
+
         return ResponseEntity.ok(taskDtos);
     }
     
@@ -109,11 +125,11 @@ public class ContractReviewController {
     @Operation(summary = "获取最新任务", description = "获取指定合同的最新审查任务")
     public ResponseEntity<ContractTaskDto> getLatestTaskByContractId(
             @PathVariable Long contractId) {
-        
-        Optional<ContractTask> latestTask = contractReviewService.getLatestTaskByContractId(contractId);
-        
-        if (latestTask.isPresent()) {
-            return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(latestTask.get()));
+
+        Optional<ContractReview> latestReview = contractReviewService.getLatestTaskByContractId(contractId);
+
+        if (latestReview.isPresent()) {
+            return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(latestReview.get()));
         } else {
             return ResponseEntity.notFound().build();
         }
