@@ -67,6 +67,7 @@ public class TaskConfiguration {
     /**
      * 获取超时时间（兼容性方法）
      */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     public java.time.Duration getTimeout() {
         return java.time.Duration.ofSeconds(timeoutSeconds);
     }

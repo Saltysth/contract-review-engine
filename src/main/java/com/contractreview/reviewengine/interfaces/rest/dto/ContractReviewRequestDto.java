@@ -3,6 +3,7 @@ package com.contractreview.reviewengine.interfaces.rest.dto;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,8 +19,8 @@ import lombok.NoArgsConstructor;
 @Schema(description = "合同审查请求")
 public class ContractReviewRequestDto {
     
-    @NotBlank(message = "合同ID不能为空")
-    @Schema(description = "合同ID", example = "CONTRACT-2024-001", required = true)
+    @Positive(message = "合同ID不能为空")
+    @Schema(description = "合同ID", required = true)
     private Long contractId;
 
     @NotBlank(message = "文件路径uuid")

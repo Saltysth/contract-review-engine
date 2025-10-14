@@ -1,4 +1,4 @@
-package com.contractreview.reviewengine.interfaces.rest;
+package com.contractreview.reviewengine.interfaces.rest.controller;
 
 import com.contractreview.reviewengine.application.service.TaskService;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;

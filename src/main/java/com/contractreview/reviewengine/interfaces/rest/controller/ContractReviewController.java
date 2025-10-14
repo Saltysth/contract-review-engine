@@ -1,4 +1,4 @@
-package com.contractreview.reviewengine.interfaces.rest;
+package com.contractreview.reviewengine.interfaces.rest.controller;
 
 import com.contractreview.reviewengine.application.service.ContractReviewService;
 import com.contractreview.reviewengine.domain.model.ContractReview;
@@ -39,11 +39,11 @@ public class ContractReviewController {
     /**
      * 创建合同审查任务
      */
-    @PostMapping("/tasks/{contractId}")
+    @PostMapping("/tasks/")
     @Operation(summary = "创建审查任务", description = "创建新的合同审查任务")
-    public ResponseEntity<ContractTaskDto> createReviewTask(@PathVariable Long contractId) {
+    public ResponseEntity<ContractTaskDto> createReviewTask(@Valid @RequestBody ContractReviewRequestDto requestDto) {
 
-        ContractReview contractReview = contractReviewService.createContractReviewTask(contractId);
+        ContractReview contractReview = contractReviewService.createContractReviewTask(requestDto);
 
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
     }
@@ -53,7 +53,7 @@ public class ContractReviewController {
      */
     @PutMapping("/tasks/{contractTaskId}")
     @Operation(summary = "更新审查任务", description = "更新合同审查任务的信息")
-    public ResponseEntity<ContractTaskDto> updateReviewTask(@PathVariable Long contractId,
+    public ResponseEntity<ContractTaskDto> updateReviewTask(@PathVariable("contractTaskId") Long contractId,
                                                             @Valid @RequestBody ContractReviewRequestDto requestDto) {
 
         ContractReview contractReview = contractReviewService.updateContractReviewTask(contractId, requestDto);
@@ -66,7 +66,7 @@ public class ContractReviewController {
      */
     @DeleteMapping("/tasks/{contractTaskId}")
     @Operation(summary = "删除审查任务", description = "删除指定的合同审查任务")
-    public ResponseEntity<Boolean> deleteReviewTask(@PathVariable Long contractTaskId) {
+    public ResponseEntity<Boolean> deleteReviewTask(@PathVariable("contractTaskId") Long contractTaskId) {
         return ResponseEntity.ok(contractReviewService.deleteContractReviewTask(contractTaskId));
     }
     
@@ -75,7 +75,7 @@ public class ContractReviewController {
      */
     @PostMapping("/tasks/{taskId}/start")
     @Operation(summary = "启动审查", description = "启动指定的合同审查任务")
-    public ResponseEntity<Void> startReview(@PathVariable Long taskId) {
+    public ResponseEntity<Void> startReview(@PathVariable("taskId") Long taskId) {
         TaskId id = TaskId.of(taskId);
         contractReviewService.startContractReview(id);
         return ResponseEntity.ok().build();
@@ -86,7 +86,7 @@ public class ContractReviewController {
      */
     @GetMapping("/tasks/{taskId}")
     @Operation(summary = "获取任务详情", description = "获取合同审查任务的详细信息")
-    public ResponseEntity<ContractTaskDto> getContractTask(@PathVariable Long taskId) {
+    public ResponseEntity<ContractTaskDto> getContractTask(@PathVariable("taskId") Long taskId) {
         TaskId id = TaskId.of(taskId);
         ContractReview contractReview = contractReviewService.getContractTask(id);
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
@@ -97,7 +97,7 @@ public class ContractReviewController {
      */
     @GetMapping("/tasks/{taskId}/result")
     @Operation(summary = "获取审查结果", description = "获取合同审查的结果")
-    public ResponseEntity<ReviewResultDto> getReviewResult(@PathVariable Long taskId) {
+    public ResponseEntity<ReviewResultDto> getReviewResult(@PathVariable("taskId") Long taskId) {
         TaskId id = TaskId.of(taskId);
         Optional<ReviewResult> result = contractReviewService.getReviewResult(id);
         
@@ -114,7 +114,7 @@ public class ContractReviewController {
     @GetMapping("/contracts/{contractId}/tasks")
     @Operation(summary = "获取合同任务", description = "获取指定合同的所有审查任务")
     public ResponseEntity<List<ContractTaskDto>> getTasksByContractId(
-            @PathVariable Long contractId) {
+            @PathVariable("contractId") Long contractId) {
 
         List<ContractReview> reviews = contractReviewService.getTasksByContractId(contractId);
         List<ContractTaskDto> taskDtos = reviews.stream()
@@ -130,7 +130,7 @@ public class ContractReviewController {
     @GetMapping("/contracts/{contractId}/latest-task")
     @Operation(summary = "获取最新任务", description = "获取指定合同的最新审查任务")
     public ResponseEntity<ContractTaskDto> getLatestTaskByContractId(
-            @PathVariable Long contractId) {
+            @PathVariable("contractId") Long contractId) {
 
         Optional<ContractReview> latestReview = contractReviewService.getLatestTaskByContractId(contractId);
 

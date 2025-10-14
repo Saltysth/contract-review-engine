@@ -38,8 +38,8 @@ public class ContractReviewService {
     /**
      * 创建合同审查任务
      */
-    public ContractReview createContractReviewTask(Long contractId) {
-
+    public ContractReview createContractReviewTask(@Valid ContractReviewRequestDto requestDto) {
+        Long contractId = requestDto.getContractId();
         ContractFeignDTO contract = contractFeignClient.getContractById(contractId);
 
         // 创建基础任务

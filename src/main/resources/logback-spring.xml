@@ -88,13 +88,13 @@
     </logger>
 
     <!-- Hibernate 参数绑定日志 -->
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="SQL_FILE"/>
     </logger>
 
     <!-- Feign客户端日志 -->
-    <logger name="feign" level="DEBUG" additivity="false">
+    <logger name="feign" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="MAIN_FILE"/>
     </logger>

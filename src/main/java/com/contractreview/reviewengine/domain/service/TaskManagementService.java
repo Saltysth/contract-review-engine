@@ -27,18 +27,17 @@ public class TaskManagementService {
      * 创建新任务
      */
     public Task createTask(TaskType taskType, TaskConfiguration configuration) {
-        Long taskId = System.currentTimeMillis(); // 简单的ID生成
-
         Task task = Task.builder()
-                .id(taskId)
+                .taskName("Contract Review Task - " + taskType)
                 .taskType(taskType)
                 .status(TaskStatus.PENDING)
+                .configuration(configuration)
                 .build();
 
         task.initializeAuditInfo();
 
         Task savedTask = taskRepository.save(task);
-        log.info("Created new task: {}", taskId);
+        log.info("Created new task: {}", savedTask.getId());
 
         return savedTask;
     }
