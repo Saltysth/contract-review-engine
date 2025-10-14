@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableAsync
 @EnableCaching
+@EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.contract.common.feign")
 @EnableJpaRepositories(basePackages = "com.contractreview.reviewengine.infrastructure.persistence.repository")
 @EntityScan(basePackages = "com.contractreview.reviewengine.infrastructure.persistence.entity")

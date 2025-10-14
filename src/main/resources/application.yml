@@ -13,6 +13,8 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER:localhost:18848}
+        group: CONTRACT_REVIEW
+
     openfeign:
       client:
         config:
