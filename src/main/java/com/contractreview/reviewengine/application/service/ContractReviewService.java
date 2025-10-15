@@ -14,6 +14,7 @@ import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequest
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -135,6 +136,14 @@ public class ContractReviewService {
         if (contractReview.isEmpty()) {
             return false;
         }
+
+        ResponseEntity<Boolean> response =
+            contractFeignClient.deleteContract(contractReview.get().getContractId());
+        if (!response.hasBody() || (response.hasBody()) && Boolean.FALSE.equals(response.getBody())) {
+            log.warn("合同删除失败，未删除合同任务");
+            return false;
+        }
+        log.info("合同删除成功");
 
         // 如果存在，执行删除并返回删除结果
         ContractReview mainTask = contractReview.get();
