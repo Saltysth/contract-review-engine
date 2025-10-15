@@ -29,7 +29,6 @@ public class TaskConverter {
 
         return TaskEntity.builder()
                 .id(domain.getId() != null ? domain.getId().getValue() : null)
-                .taskId(domain.getId() != null ? domain.getId().getValue() : null)
                 .taskName(domain.getTaskName())
                 .taskType(domain.getTaskType())
                 .status(domain.getStatus())
@@ -63,7 +62,7 @@ public class TaskConverter {
         );
 
         return Task.reconstruct(
-                TaskId.of(entity.getTaskId()),
+                TaskId.of(entity.getId()),
                 entity.getTaskName(),
                 entity.getTaskType(),
                 entity.getStatus(),

@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
  * @author SaltyFish
  */
 @Entity
-@Table(name = "tasks")
+@Table(name = "task")
 @Data
 @Builder
 @NoArgsConstructor
@@ -38,9 +38,6 @@ public class TaskEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-
-    @Column(name = "task_id", unique = true, nullable = false)
-    private Long taskId;
 
     @Column(name = "task_name", nullable = false)
     private String taskName;

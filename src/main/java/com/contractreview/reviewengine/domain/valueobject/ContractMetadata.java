@@ -20,18 +20,15 @@ public class ContractMetadata {
 
     private String fileUuid;
 
-    private String contractTitle;
-
     private List<String> businessTags;
 
     /**
      * 创建合同元数据
      */
-    public static ContractMetadata of(Long contractId, String fileUuid, String contractTitle) {
+    public static ContractMetadata of(Long contractId, String fileUuid) {
         return ContractMetadata.builder()
                 .contractId(contractId)
                 .fileUuid(fileUuid)
-                .contractTitle(contractTitle)
                 .build();
     }
 

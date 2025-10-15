@@ -3,6 +3,7 @@ package com.contractreview.reviewengine.infrastructure.persistence.repository;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.infrastructure.persistence.entity.TaskEntity;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,11 +21,6 @@ import java.util.List;
  */
 @Repository
 public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
-
-    /**
-     * 根据任务ID查找任务实体
-     */
-    TaskEntity findByTaskId(Long taskId);
 
     /**
      * 根据状态查找任务
@@ -69,10 +65,11 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
     /**
      * 检查任务ID是否存在
      */
-    boolean existsByTaskId(Long taskId);
+    boolean existsById(Long id);
 
     /**
      * 根据任务ID删除任务
      */
-    void deleteByTaskId(Long taskId);
+    void deleteById(Long id);
+
 }

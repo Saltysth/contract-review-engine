@@ -7,6 +7,9 @@ import com.contractreview.reviewengine.infrastructure.persistence.entity.Contrac
 import com.contractreview.reviewengine.infrastructure.persistence.projection.ContractTaskProjection;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * 合同审查转换器
  */
@@ -31,7 +34,6 @@ public class ContractReviewConverter {
             ContractMetadata metadata = contractReview.getContractMetadata();
             entity.setContractId(metadata.getContractId());
             entity.setFileUuid(metadata.getFileUuid());
-            entity.setContractTitle(metadata.getContractTitle());
             entity.setBusinessTags(metadata.getBusinessTags());
         }
 
@@ -43,7 +45,7 @@ public class ContractReviewConverter {
             entity.setCurrency(config.getCurrency());
             entity.setContractType(config.getContractType());
             entity.setTypeConfidence(config.getTypeConfidence());
-            entity.setReviewRules(config.getReviewRules());
+            entity.setReviewRules(String.join(",", config.getReviewRules()));
             entity.setPromptTemplate(config.getPromptTemplate());
             entity.setEnableTerminology(config.getEnableTerminology());
         }
@@ -62,7 +64,6 @@ public class ContractReviewConverter {
         ContractMetadata metadata = ContractMetadata.builder()
                 .contractId(entity.getContractId())
                 .fileUuid(entity.getFileUuid())
-                .contractTitle(entity.getContractTitle())
                 .businessTags(entity.getBusinessTags())
                 .build();
 
@@ -73,7 +74,7 @@ public class ContractReviewConverter {
                 .currency(entity.getCurrency())
                 .contractType(entity.getContractType())
                 .typeConfidence(entity.getTypeConfidence())
-                .reviewRules(entity.getReviewRules())
+                .reviewRules(List.of(entity.getReviewRules()))
                 .promptTemplate(entity.getPromptTemplate())
                 .enableTerminology(entity.getEnableTerminology())
                 .build();
@@ -99,7 +100,6 @@ public class ContractReviewConverter {
         ContractMetadata metadata = ContractMetadata.builder()
                 .contractId(projection.getContractId())
                 .fileUuid(projection.getFileUuid())
-                .contractTitle(projection.getContractTitle())
                 .businessTags(projection.getBusinessTags())
                 .build();
 
@@ -109,7 +109,7 @@ public class ContractReviewConverter {
                 .currency(projection.getCurrency())
                 .contractType(projection.getContractType())
                 .typeConfidence(projection.getTypeConfidence())
-                .reviewRules(projection.getReviewRules())
+                .reviewRules(List.of(projection.getReviewRules().split(",")))
                 .promptTemplate(projection.getPromptTemplate())
                 .enableTerminology(projection.getEnableTerminology())
                 .build();

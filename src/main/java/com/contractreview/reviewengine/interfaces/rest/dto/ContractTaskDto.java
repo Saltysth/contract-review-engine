@@ -29,9 +29,6 @@ public class ContractTaskDto extends TaskDto {
     @Schema(description = "文件uuid")
     private String fileUuid;
 
-    @Schema(description = "合同标题")
-    private String contractTitle;
-
     @Schema(description = "业务标签", nullable = true)
     private List<String> businessTags;
 

@@ -50,8 +50,7 @@ public class ContractReviewService {
         ContractReview contractReview = ContractReview.create(
                 task.getId().getValue(),
                 contractId,
-                contract.getAttachmentUuid(),
-                contract.getContractName()
+                contract.getAttachmentUuid()
         );
 
         ContractReview savedReview = contractReviewRepository.save(contractReview);

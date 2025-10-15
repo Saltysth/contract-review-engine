@@ -50,11 +50,8 @@ public class TaskRepositoryImpl implements TaskRepository {
             return Optional.empty();
         }
 
-        TaskEntity entity = jpaRepository.findByTaskId(taskId.getValue());
-        if (entity == null) {
-            return Optional.empty();
-        }
-        return Optional.of(converter.toDomain(entity));
+        Optional<TaskEntity> entity = jpaRepository.findById(taskId.getValue());
+        return entity.map(converter::toDomain);
     }
 
     @Override
@@ -136,7 +133,7 @@ public class TaskRepositoryImpl implements TaskRepository {
             return false;
         }
 
-        return jpaRepository.existsByTaskId(taskId.getValue());
+        return jpaRepository.existsById(taskId.getValue());
     }
 
     @Override
@@ -149,7 +146,7 @@ public class TaskRepositoryImpl implements TaskRepository {
             throw new IllegalArgumentException("Task not found with id: " + taskId);
         }
 
-        jpaRepository.deleteByTaskId(taskId.getValue());
+        jpaRepository.deleteById(taskId.getValue());
     }
 
     @Override

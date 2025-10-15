@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * 合同审查领域实体
  *
@@ -39,8 +41,8 @@ public class ContractReview {
     /**
      * 创建合同审查
      */
-    public static ContractReview create(Long taskId, Long contractId, String fileUuid, String contractTitle) {
-        ContractMetadata metadata = ContractMetadata.of(contractId, fileUuid, contractTitle);
+    public static ContractReview create(Long taskId, Long contractId, String fileUuid) {
+        ContractMetadata metadata = ContractMetadata.of(contractId, fileUuid);
         ReviewConfiguration configuration = ReviewConfiguration.defaultConfiguration();
 
         return new ContractReview(taskId, metadata, configuration);
@@ -58,7 +60,7 @@ public class ContractReview {
     /**
      * 更新审查规则
      */
-    public void updateReviewRules(String rules) {
+    public void updateReviewRules(List<String> rules) {
         if (this.reviewConfiguration != null) {
             this.reviewConfiguration.setReviewRules(rules);
         }
@@ -94,13 +96,7 @@ public class ContractReview {
         return contractMetadata != null ? contractMetadata.getFileUuid() : null;
     }
 
-    /**
-     * 获取合同标题
-     */
-    public String getContractTitle() {
-        return contractMetadata != null ? contractMetadata.getContractTitle() : null;
-    }
-
+    
     /**
      * 获取审查类型
      */

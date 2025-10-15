@@ -54,9 +54,6 @@ public class ContractTaskEntity {
     @Column(name = "file_uuid", nullable = false, length = 50)
     private String fileUuid;
 
-    @Column(name = "contract_title", nullable = false)
-    private String contractTitle;
-
     @Convert(converter = StringListConverter.class)
     @Column(name = "business_tags")
     private List<String> businessTags;

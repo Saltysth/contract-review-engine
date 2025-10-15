@@ -32,7 +32,7 @@ public class ReviewConfiguration {
 
     private BigDecimal typeConfidence;
 
-    private String reviewRules;
+    private List<String> reviewRules;
 
     private PromptTemplateType promptTemplate;
 

@@ -20,8 +20,6 @@ public interface ContractTaskProjection {
 
     String getFileUuid();
 
-    String getContractTitle();
-
     List<String> getBusinessTags();
 
     ReviewType getReviewType();
