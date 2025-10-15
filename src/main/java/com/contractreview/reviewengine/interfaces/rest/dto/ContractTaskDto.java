@@ -22,7 +22,7 @@ import java.util.List;
 @AllArgsConstructor
 @Schema(description = "合同审查任务信息")
 public class ContractTaskDto extends TaskDto {
-    
+
     @Schema(description = "合同ID")
     private Long contractId;
 
@@ -39,7 +39,7 @@ public class ContractTaskDto extends TaskDto {
     private ReviewType reviewType;
 
     @Schema(description = "个性化选择的审查类型条目")
-    List<ReviewTypeDetail> customSelectedReviewTypes;
+    private List<ReviewTypeDetail> customSelectedReviewTypes;
 
     @Schema(description = "所属行业", nullable = true)
     private String industry;

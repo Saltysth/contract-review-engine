@@ -27,14 +27,12 @@ public class TaskManagementService {
      * 创建新任务
      */
     public Task createTask(TaskType taskType, TaskConfiguration configuration) {
-        Task task = Task.builder()
-                .taskName("Contract Review Task - " + taskType)
-                .taskType(taskType)
-                .status(TaskStatus.PENDING)
-                .configuration(configuration)
-                .build();
+        String taskName = "Contract Review Task - " + taskType;
+        Task task = Task.create(taskName, taskType, 1L); // TODO: 从安全上下文获取当前用户ID
 
-        task.initializeAuditInfo();
+        if (configuration != null) {
+            task.updateConfiguration(configuration);
+        }
 
         Task savedTask = taskRepository.save(task);
         log.info("Created new task: {}", savedTask.getId());
@@ -107,8 +105,7 @@ public class TaskManagementService {
      */
     public boolean deleteTask(TaskId taskId) {
         try {
-            Task task = getTaskById(taskId);
-            taskRepository.delete(task);
+            taskRepository.deleteById(taskId);
             log.info("Deleted task: {}", taskId);
             return true;
         } catch (Exception e) {

@@ -48,7 +48,7 @@ public class ContractReviewService {
 
         // 创建合同审查
         ContractReview contractReview = ContractReview.create(
-                task.getId(),
+                task.getId().getValue(),
                 contractId,
                 contract.getAttachmentUuid(),
                 contract.getContractName()
