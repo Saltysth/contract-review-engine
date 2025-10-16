@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.application.service;
 
+import com.contract.common.constant.ContractStatus;
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
 import com.contractreview.reviewengine.domain.enums.TaskType;
@@ -10,6 +11,7 @@ import com.contractreview.reviewengine.domain.repository.ContractReviewRepositor
 import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
 import com.contractreview.reviewengine.domain.service.TaskManagementService;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
+import com.contractreview.reviewengine.interfaces.rest.converter.ContractReviewConverter;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,7 @@ public class ContractReviewService {
     private final TaskManagementService taskManagementService;
     private final ContractReviewRepository contractReviewRepository;
     private final ReviewResultRepository reviewResultRepository;
+    private final ContractReviewConverter contractReviewConverter;
     
     /**
      * 创建合同审查任务
@@ -149,8 +152,57 @@ public class ContractReviewService {
         return taskManagementService.deleteTask(TaskId.of(mainTask.getTaskId()));
     }
 
-    public ContractReview updateContractReviewTask(Long contractId, @Valid ContractReviewRequestDto requestDto) {
+    public ContractReview updateContractReviewTask(@Valid ContractReviewRequestDto requestDto) {
+        validateContractTaskStatusForUpdate(requestDto);
 
-        return null;
+        // 获取要更新的合同审查任务
+        Optional<ContractReview> existingReviewOpt = getLatestTaskByContractId(requestDto.getContractId());
+        if (existingReviewOpt.isEmpty()) {
+            throw new IllegalArgumentException("No contract review task found for contract: " + requestDto.getContractId());
+        }
+
+        ContractReview existingReview = existingReviewOpt.get();
+        TaskId taskId = TaskId.of(existingReview.getTaskId());
+
+        // 根据DTO中的不同部分，检查是否需要更新并调用相应的领域方法
+
+        // 1. 检查并更新任务配置（task部分）
+        var currentTaskConfig = taskManagementService.getTaskConfiguration(taskId);
+        if (contractReviewConverter.needsTaskConfigurationUpdate(requestDto, currentTaskConfig)) {
+            TaskConfiguration newTaskConfig = contractReviewConverter.convertToTaskConfiguration(requestDto);
+            taskManagementService.updateTaskConfiguration(taskId, newTaskConfig);
+            log.info("Updated task configuration for task: {}", taskId);
+        }
+
+        // 2. 检查并更新合同元数据（contract部分 - 这里只有业务标签可更新）
+        if (contractReviewConverter.needsContractMetadataUpdate(requestDto, existingReview.getContractMetadata())) {
+            var newContractMetadata = contractReviewConverter.convertToContractMetadata(requestDto);
+            existingReview.updateContractMetadata(newContractMetadata);
+            log.info("Updated contract metadata for task: {}", taskId);
+        }
+
+        // 3. 检查并更新审查配置（contract_task部分）
+        if (contractReviewConverter.needsReviewConfigurationUpdate(requestDto, existingReview.getReviewConfiguration())) {
+            var newReviewConfig = contractReviewConverter.convertToReviewConfiguration(requestDto);
+            existingReview.updateReviewConfiguration(newReviewConfig);
+            log.info("Updated review configuration for task: {}", taskId);
+        }
+
+        // 保存更新后的合同审查
+        ContractReview savedReview = contractReviewRepository.save(existingReview);
+        log.info("Successfully updated contract review task: {} for contract: {}", taskId, requestDto.getContractId());
+
+        return savedReview;
+    }
+
+    private void validateContractTaskStatusForUpdate(@Valid ContractReviewRequestDto requestDto) {
+        if (requestDto.getContractId() == null) {
+            log.warn("contractId cannot be null");
+            throw new IllegalArgumentException("contractId cannot be null");
+        }
+        if (!ContractStatus.DRAFT.equals(requestDto.getContractStatus())) {
+            log.warn("Contract task cannot be updated: {} (status is not draft)", requestDto.getContractId());
+            throw new IllegalArgumentException("Contract task cannot be updated: status is not draft");
+        }
     }
 }

@@ -49,6 +49,15 @@ public class ContractReview {
     }
 
     /**
+     * 更新合同元数据
+     */
+    public void updateContractMetadata(ContractMetadata metadata) {
+        if (metadata != null && metadata.isValid()) {
+            this.contractMetadata = metadata;
+        }
+    }
+
+    /**
      * 更新审查配置
      */
     public void updateReviewConfiguration(ReviewConfiguration configuration) {

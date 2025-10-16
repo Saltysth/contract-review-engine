@@ -49,14 +49,13 @@ public class ContractReviewController {
     }
 
     /**
-     * 更新合同审查任务 TODO 这里设置type
+     * 更新合同审查任务
      */
     @PutMapping("/tasks/{contractTaskId}")
     @Operation(summary = "更新审查任务", description = "更新合同审查任务的信息")
-    public ResponseEntity<ContractTaskDto> updateReviewTask(@PathVariable("contractTaskId") Long contractId,
-                                                            @Valid @RequestBody ContractReviewRequestDto requestDto) {
+    public ResponseEntity<ContractTaskDto> updateReviewTask(@Valid @RequestBody ContractReviewRequestDto requestDto) {
 
-        ContractReview contractReview = contractReviewService.updateContractReviewTask(contractId, requestDto);
+        ContractReview contractReview = contractReviewService.updateContractReviewTask(requestDto);
 
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
     }

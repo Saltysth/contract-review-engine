@@ -159,4 +159,22 @@ public class TaskManagementService {
         Task task = getTaskById(taskId);
         return task.getStatus();
     }
+
+    /**
+     * 获取任务配置
+     */
+    public TaskConfiguration getTaskConfiguration(TaskId taskId) {
+        Task task = getTaskById(taskId);
+        return task.getConfiguration();
+    }
+
+    /**
+     * 更新任务配置
+     */
+    public void updateTaskConfiguration(TaskId taskId, TaskConfiguration configuration) {
+        Task task = getTaskById(taskId);
+        task.updateConfiguration(configuration);
+        taskRepository.save(task);
+        log.info("Updated task configuration for task: {}", taskId);
+    }
 }
