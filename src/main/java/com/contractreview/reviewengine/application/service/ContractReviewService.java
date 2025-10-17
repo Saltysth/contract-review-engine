@@ -43,8 +43,8 @@ public class ContractReviewService {
      * 创建合同审查任务
      */
     public ContractReview createContractReviewTask(@Valid ContractReviewRequestDto requestDto) {
-        Long contractId = requestDto.getContractId();
-        ContractFeignDTO contract = contractFeignClient.getContractById(contractId);
+        ContractFeignDTO contract = contractFeignClient.createContract(requestDto.getFileUuid());
+        Long contractId = contract.getId();
 
         // 创建基础任务
         var task = taskManagementService.createTask(TaskType.CLASSIFICATION, TaskConfiguration.defaultTaskConfiguration());
@@ -61,7 +61,7 @@ public class ContractReviewService {
 
         return savedReview;
     }
-    
+
     /**
      * 获取合同任务
      */
@@ -139,9 +139,9 @@ public class ContractReviewService {
             return false;
         }
 
-        ResponseEntity<Boolean> response =
+        Boolean response =
             contractFeignClient.deleteContract(contractReview.get().getContractId());
-        if (!response.hasBody() || (response.hasBody()) && Boolean.FALSE.equals(response.getBody())) {
+        if (Boolean.FALSE.equals(response)) {
             log.warn("合同删除失败，未删除合同任务");
             return false;
         }
