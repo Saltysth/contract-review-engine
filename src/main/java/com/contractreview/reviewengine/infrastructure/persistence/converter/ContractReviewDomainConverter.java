@@ -8,13 +8,12 @@ import com.contractreview.reviewengine.infrastructure.persistence.projection.Con
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 合同审查转换器
  */
 @Component
-public class ContractReviewConverter {
+public class ContractReviewDomainConverter {
 
     /**
      * 领域实体转JPA实体

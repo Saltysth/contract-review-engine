@@ -3,7 +3,7 @@ package com.contractreview.reviewengine.infrastructure.persistence.repository;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
-import com.contractreview.reviewengine.infrastructure.persistence.converter.ContractReviewConverter;
+import com.contractreview.reviewengine.infrastructure.persistence.converter.ContractReviewDomainConverter;
 import com.contractreview.reviewengine.infrastructure.persistence.entity.ContractTaskEntity;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class ContractReviewRepositoryImpl implements ContractReviewRepository {
 
     private final ContractTaskJpaRepository jpaRepository;
-    private final ContractReviewConverter converter;
+    private final ContractReviewDomainConverter converter;
 
     @Override
     public ContractReview save(ContractReview contractReview) {
