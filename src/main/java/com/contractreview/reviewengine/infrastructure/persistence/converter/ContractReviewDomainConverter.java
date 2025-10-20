@@ -44,9 +44,15 @@ public class ContractReviewDomainConverter {
             entity.setCurrency(config.getCurrency());
             entity.setContractType(config.getContractType());
             entity.setTypeConfidence(config.getTypeConfidence());
-            entity.setReviewRules(String.join(",", config.getReviewRules()));
-            entity.setPromptTemplate(config.getPromptTemplate());
-            entity.setEnableTerminology(config.getEnableTerminology());
+            if (config.getReviewRules() != null) {
+                entity.setReviewRules(String.join(",", config.getReviewRules()));
+            }
+            if (config.getPromptTemplate() != null) {
+                entity.setPromptTemplate(config.getPromptTemplate());
+            }
+            if (config.getEnableTerminology() != null) {
+                entity.setEnableTerminology(config.getEnableTerminology());
+            }
         }
 
         return entity;
@@ -73,7 +79,7 @@ public class ContractReviewDomainConverter {
                 .currency(entity.getCurrency())
                 .contractType(entity.getContractType())
                 .typeConfidence(entity.getTypeConfidence())
-                .reviewRules(List.of(entity.getReviewRules()))
+                .reviewRules(entity.getReviewRules() != null ? List.of(entity.getReviewRules()) : null)
                 .promptTemplate(entity.getPromptTemplate())
                 .enableTerminology(entity.getEnableTerminology())
                 .build();

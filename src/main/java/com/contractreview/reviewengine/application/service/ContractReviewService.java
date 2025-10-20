@@ -12,6 +12,7 @@ import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
 import com.contractreview.reviewengine.domain.service.TaskManagementService;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.contractreview.reviewengine.interfaces.rest.converter.ContractReviewConverter;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +43,7 @@ public class ContractReviewService {
     /**
      * 创建合同审查任务
      */
-    public ContractReview createContractReviewTask(@Valid ContractReviewRequestDto requestDto) {
+    public ContractReview createContractReviewTask(ContractReviewCreateRequestDto requestDto) {
         ContractFeignDTO contract = contractFeignClient.createContract(requestDto.getFileUuid());
         Long contractId = contract.getId();
 

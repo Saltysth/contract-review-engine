@@ -52,7 +52,7 @@ public class Task {
         }
 
         Task task = new Task();
-        task.id = TaskId.generate();
+        task.id = null; // 数据库生成ID
         task.taskName = taskName;
         task.taskType = taskType;
         task.status = TaskStatus.PENDING;

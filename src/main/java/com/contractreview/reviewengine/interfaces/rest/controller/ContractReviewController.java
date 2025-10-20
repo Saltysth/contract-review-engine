@@ -4,6 +4,7 @@ import com.contractreview.reviewengine.application.service.ContractReviewService
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
@@ -41,7 +42,7 @@ public class ContractReviewController {
      */
     @PostMapping("/tasks/")
     @Operation(summary = "创建审查任务", description = "创建新的合同审查任务")
-    public ResponseEntity<ContractTaskDto> createReviewTask(@Valid @RequestBody ContractReviewRequestDto requestDto) {
+    public ResponseEntity<ContractTaskDto> createReviewTask(@Valid @RequestBody ContractReviewCreateRequestDto requestDto) {
 
         ContractReview contractReview = contractReviewService.createContractReviewTask(requestDto);
 

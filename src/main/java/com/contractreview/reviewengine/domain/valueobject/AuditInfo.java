@@ -46,13 +46,14 @@ public class AuditInfo {
      */
     public static AuditInfo create(Long userId) {
         LocalDateTime now = LocalDateTime.now();
-        return new AuditInfo(userId, now, userId, now);
+        return new AuditInfo(userId, now, userId, now, 1L);
     }
     
     /**
      * 更新审计信息
      */
     public AuditInfo update(Long userId) {
-        return new AuditInfo(this.createdBy, this.createdTime, userId, LocalDateTime.now());
+        Long newVersion = (this.objectVersionNumber == null) ? 1L : this.objectVersionNumber + 1;
+        return new AuditInfo(this.createdBy, this.createdTime, userId, LocalDateTime.now(), newVersion);
     }
 }

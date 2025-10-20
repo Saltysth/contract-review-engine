@@ -106,7 +106,7 @@
     </logger>
 
     <!-- 根日志级别 -->
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="MAIN_FILE"/>
         <appender-ref ref="ERROR_FILE"/>

@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -79,6 +80,7 @@ public class TaskEntity {
     @Column(name = "updated_time")
     private LocalDateTime updatedTime;
 
+    @Version
     @Column(name = "object_version_number")
     private Long objectVersionNumber;
 }
