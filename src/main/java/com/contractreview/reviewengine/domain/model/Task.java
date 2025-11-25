@@ -30,13 +30,6 @@ public class Task {
     private String taskName;
     private TaskType taskType;
     private TaskStatus status;
-    /**
-     * @deprecated 当前执行阶段字段已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
-     * 请使用任务状态来跟踪任务进度。
-     * @since 1.0.0
-     * @see TaskStatus
-     */
-    @Deprecated
     private ExecutionStage currentStage;
     private TaskConfiguration configuration;
     private String errorMessage;

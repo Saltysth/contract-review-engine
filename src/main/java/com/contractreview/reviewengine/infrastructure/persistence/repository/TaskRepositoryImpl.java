@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.infrastructure.persistence.repository;
 
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.Task;
@@ -186,5 +187,41 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public void deleteAll() {
         jpaRepository.deleteAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> findNonFinalStageTasks() {
+        List<TaskEntity> entities = jpaRepository.findNonFinalStageTasks(ExecutionStage.REVIEW_COMPLETED);
+        return converter.toDomainList(entities);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> findRetryableTasks() {
+        List<TaskEntity> entities = jpaRepository.findRetryableTasks(LocalDateTime.now());
+        return converter.toDomainList(entities);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> findByCurrentStage(ExecutionStage stage) {
+        if (stage == null) {
+            return List.of();
+        }
+
+        List<TaskEntity> entities = jpaRepository.findByCurrentStage(stage);
+        return converter.toDomainList(entities);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Task> findByStatusAndCurrentStage(TaskStatus status, ExecutionStage currentStage) {
+        if (status == null || currentStage == null) {
+            return List.of();
+        }
+
+        List<TaskEntity> entities = jpaRepository.findByStatusAndCurrentStage(status, currentStage);
+        return converter.toDomainList(entities);
     }
 }

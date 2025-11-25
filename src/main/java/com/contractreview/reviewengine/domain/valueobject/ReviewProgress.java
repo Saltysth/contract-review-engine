@@ -22,67 +22,66 @@ import java.util.Map;
 @Builder
 @Deprecated(since = "1.0.0", forRemoval = true)
 public class ReviewProgress {
-    
+
     ExecutionStage currentStage;
     int progressPercentage;
     @Builder.Default
-    Map<ExecutionStage, StageResult> stageResults = new HashMap<>();
+    Map<String, Object> stageResults = new HashMap<>();
     @Builder.Default
     LocalDateTime lastUpdated = LocalDateTime.now();
-    
+
     public ReviewProgress(ExecutionStage currentStage, int progressPercentage) {
         this.currentStage = currentStage;
         this.progressPercentage = Math.max(0, Math.min(100, progressPercentage));
         this.stageResults = new HashMap<>();
         this.lastUpdated = LocalDateTime.now();
     }
-    
-    public ReviewProgress(ExecutionStage currentStage, int progressPercentage, 
-                          Map<ExecutionStage, StageResult> stageResults, LocalDateTime lastUpdated) {
+
+    public ReviewProgress(ExecutionStage currentStage, int progressPercentage,
+                          Map<String, Object> stageResults, LocalDateTime lastUpdated) {
         this.currentStage = currentStage;
         this.progressPercentage = Math.max(0, Math.min(100, progressPercentage));
         this.stageResults = new HashMap<>(stageResults != null ? stageResults : new HashMap<>());
         this.lastUpdated = lastUpdated != null ? lastUpdated : LocalDateTime.now();
     }
-    
+
     /**
      * 更新阶段
      */
     public ReviewProgress updateStage(ExecutionStage newStage, int percentage) {
         return new ReviewProgress(newStage, percentage, this.stageResults, LocalDateTime.now());
     }
-    
+
     /**
      * 完成阶段
      */
-    public ReviewProgress completeStage(ExecutionStage stage, StageResult result) {
-        Map<ExecutionStage, StageResult> newStageResults = new HashMap<>(this.stageResults);
-        newStageResults.put(stage, result);
+    public ReviewProgress completeStage(ExecutionStage stage, Object result) {
+        Map<String, Object> newStageResults = new HashMap<>(this.stageResults);
+        newStageResults.put(stage.name(), result);
         return new ReviewProgress(this.currentStage, this.progressPercentage, newStageResults, LocalDateTime.now());
     }
-    
+
     /**
      * 检查是否已完成
      */
     public boolean isCompleted() {
         return progressPercentage >= 100 && currentStage.isFinalStage();
     }
-    
+
     /**
      * 获取阶段结果
      */
-    public StageResult getStageResult(ExecutionStage stage) {
-        return stageResults.get(stage);
+    public Object getStageResult(ExecutionStage stage) {
+        return stageResults.get(stage.name());
     }
-    
+
     /**
      * 检查阶段是否已完成
      */
     public boolean isStageCompleted(ExecutionStage stage) {
-        StageResult result = stageResults.get(stage);
-        return result != null && result.isSuccess();
+        return stageResults.containsKey(stage.name());
     }
-    
+
     /**
      * 创建初始进度
      */

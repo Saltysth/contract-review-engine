@@ -135,6 +135,12 @@ app:
     default-timeout-minutes: 30
     max-retry-attempts: 3
     retry-interval-seconds: 60
+
+    # 调度器配置
+    scheduler:
+      enabled: true
+      process-delay: 8000      # 主处理轮询间隔（毫秒）
+      retry-delay: 30000       # 重试检查间隔（毫秒）
     
     # 文件处理配置
     supported-file-types:
@@ -158,13 +164,7 @@ app:
       contract-management:
         base-url: ${CONTRACT_MANAGEMENT_BASE_URL:http://localhost:8083}
         timeout-seconds: 15
-    
-    # 管道配置
-    pipeline:
-      parallel-execution: false
-      stage-timeout-minutes: 10
-      enable-circuit-breaker: true
-    
+
     # 通知配置
     notifications:
       enabled: true

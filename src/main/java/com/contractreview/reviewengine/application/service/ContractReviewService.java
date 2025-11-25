@@ -3,12 +3,15 @@ package com.contractreview.reviewengine.application.service;
 import com.contract.common.constant.ContractStatus;
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
+import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
 import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
+import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.service.TaskManagementService;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.contractreview.reviewengine.interfaces.rest.converter.ContractReviewConverter;
@@ -39,6 +42,7 @@ public class ContractReviewService {
     private final ContractReviewRepository contractReviewRepository;
     private final ReviewResultRepository reviewResultRepository;
     private final ContractReviewConverter contractReviewConverter;
+    private final TaskRepository taskRepository;
     
     /**
      * 创建合同审查任务
@@ -47,8 +51,13 @@ public class ContractReviewService {
         ContractFeignDTO contract = contractFeignClient.createContract(requestDto.getFileUuid());
         Long contractId = contract.getId();
 
-        // 创建基础任务
-        var task = taskManagementService.createTask(TaskType.CLASSIFICATION, TaskConfiguration.defaultTaskConfiguration());
+        // 创建基础任务，初始状态设为条款抽取阶段
+        TaskConfiguration config = TaskConfiguration.defaultTaskConfiguration();
+        Task task = taskManagementService.createTask(TaskType.CLASSIFICATION, config);
+
+        // 设置任务初始执行阶段为条款抽取
+        task.updateCurrentStage(ExecutionStage.CLAUSE_EXTRACTION);
+        taskRepository.save(task);
 
         // 创建合同审查
         ContractReview contractReview = ContractReview.create(
@@ -58,7 +67,8 @@ public class ContractReviewService {
         );
 
         ContractReview savedReview = contractReviewRepository.save(contractReview);
-        log.info("Created contract review task: {} for contract: {}", task.getId(), contractId);
+        log.info("Created contract review task: {} for contract: {}, initial stage: CLAUSE_EXTRACTION",
+                task.getId(), contractId);
 
         return savedReview;
     }
@@ -121,95 +131,30 @@ public class ContractReviewService {
     }
 
     /**
-     * 直接启动合同审查（新的简化实现）
-     * 此方法替代了复杂的多阶段管道处理，提供直接的合同审查功能。
+     * 启动合同审查任务
+     * 任务将由定时任务调度器自动处理，此方法仅用于触发任务状态更新
      *
      * @param taskId 任务ID
-     * @throws RuntimeException 当合同审查处理失败时
      */
     public void startContractReview(TaskId taskId) {
-        log.info("Starting direct contract review for task: {}", taskId);
+        log.info("启动合同审查任务，将由状态聚合执行器自动处理: {}", taskId);
 
-        ContractReview contractReview = getContractTask(taskId);
-
-        try {
-            // 启动任务
-            taskManagementService.startTask(taskId);
-
-            // 执行直接的合同审查处理（saveReviewResult会自动完成任务）
-            executeDirectContractReview(contractReview);
-
-            log.info("Direct contract review completed successfully for task: {}", taskId);
-
-        } catch (Exception e) {
-            log.error("Direct contract review failed for task: {}", taskId, e);
-            taskManagementService.failTask(taskId, e.getMessage());
-            throw new RuntimeException("Contract review processing failed", e);
+        // 获取任务并验证状态
+        Optional<Task> taskOpt = taskRepository.findById(taskId);
+        if (taskOpt.isEmpty()) {
+            throw new IllegalArgumentException("任务不存在: " + taskId);
         }
-    }
 
-    /**
-     * 执行直接的合同审查处理
-     * 这是简化的审查逻辑，替代了原有的多阶段管道处理。
-     *
-     * @param contractReview 合同审查对象
-     */
-    private void executeDirectContractReview(ContractReview contractReview) {
-        log.info("Executing direct contract review for contract: {}", contractReview.getContractId());
+        Task task = taskOpt.get();
 
-        // 1. 获取合同信息
-        // TODO: 调用正确的Feign客户端方法来获取合同信息
-        // var contract = contractFeignClient.getContract(contractReview.getContractId());
-        // 这里使用占位符实现，实际需要根据ContractFeignClient的API来调用
+        // 验证任务是否处于待处理状态
+        if (!task.isPending()) {
+            log.warn("任务 {} 状态不是待处理状态，当前状态: {}", taskId, task.getStatus());
+            throw new IllegalStateException("任务状态不正确，无法启动审查");
+        }
 
-        // 2. 执行合同分析（这里可以集成AI服务或其他分析逻辑）
-        ReviewResult reviewResult = performContractAnalysis(contractReview);
-
-        // 3. 保存审查结果
-        saveReviewResult(reviewResult);
-
-        log.info("Contract analysis completed for task: {}", contractReview.getId());
-    }
-
-    /**
-     * 执行合同分析
-     *
-     * @param contractReview 合同审查对象
-     * @return 审查结果
-     */
-    private ReviewResult performContractAnalysis(ContractReview contractReview) {
-        log.info("Performing contract analysis for contract: {}", contractReview.getContractId());
-
-        // TODO: 集成实际的AI分析逻辑
-        // 这里可以调用AI服务、规则引擎等进行分析
-
-        // 创建审查结果
-        ReviewResult reviewResult = ReviewResult.builder()
-                .taskId(contractReview.getTaskId())
-                .contractId(contractReview.getContractId())
-                .reviewType("FULL_REVIEW")
-                .overallRiskLevel("MEDIUM")
-                .summary("Contract review completed using simplified direct processing")
-                .build();
-
-        // TODO: 根据ReviewResult的实际字段设置分析结果
-        // 这里可能需要设置其他字段，如风险评分、合规评分等
-
-        return reviewResult;
-    }
-
-    /**
-     * 直接处理审查失败（新的简化实现）
-     *
-     * @param taskId 任务ID
-     * @param errorMessage 错误信息
-     */
-    public void handleReviewFailureDirect(TaskId taskId, String errorMessage) {
-        log.error("Direct contract review failed for task: {} - {}", taskId, errorMessage);
-        taskManagementService.failTask(taskId, errorMessage);
-
-        // 可以添加额外的失败处理逻辑，如通知、重试等
-        // TODO: 实现失败通知逻辑
+        // 任务将在定时任务中被处理，这里只需要记录日志
+        log.info("任务 {} 已准备就绪，等待状态聚合执行器处理", taskId);
     }
 
     public Boolean deleteContractReviewTask(Long contractTaskId) {

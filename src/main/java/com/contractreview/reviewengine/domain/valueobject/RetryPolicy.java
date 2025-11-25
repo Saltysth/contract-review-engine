@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 重试策略值对象
  * 
@@ -54,6 +56,11 @@ public class RetryPolicy {
      */
     @Builder.Default
     private Long maxRetryIntervalMs = 30000L;
+
+    /**
+     * 下次重试时间
+     */
+    private LocalDateTime nextRetryTime;
     
     /**
      * 创建默认重试策略

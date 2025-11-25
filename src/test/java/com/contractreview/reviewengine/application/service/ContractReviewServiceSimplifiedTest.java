@@ -41,78 +41,52 @@ class ContractReviewServiceSimplifiedTest {
     private ContractReviewService contractReviewService;
 
     @Test
-    void shouldStartDirectContractReviewSuccessfully() {
+    void shouldStartContractReviewSuccessfully() {
         // Given
         Long taskIdValue = 123L;
         TaskId taskId = TaskId.of(taskIdValue);
         Long contractId = 456L;
 
         ContractReview contractReview = ContractReview.create(taskIdValue, contractId, "file-uuid-123");
+        com.contractreview.reviewengine.domain.model.Task task =
+            com.contractreview.reviewengine.domain.model.Task.create("Test Task",
+                com.contractreview.reviewengine.domain.enums.TaskType.CLASSIFICATION, 1L);
 
         when(contractReviewRepository.findById(taskId)).thenReturn(Optional.of(contractReview));
-        when(reviewResultRepository.save(any())).thenReturn(any());
+        // Mock taskRepository behavior for the new implementation
+        when(taskManagementService.getTaskStatus(taskId)).thenReturn(com.contractreview.reviewengine.domain.enums.TaskStatus.PENDING);
 
-        // When
+        // When & Then - New implementation should not throw exception
+        // The task is prepared for processing by the scheduler
         contractReviewService.startContractReview(taskId);
 
-        // Then
-        verify(taskManagementService).startTask(taskId);
-        verify(reviewResultRepository).save(any());
-        // completeTask is called within saveReviewResult
-        verify(taskManagementService).completeTask(taskId);
+        // In the new implementation, startContractReview only validates the task state
+        // The actual processing is done by the scheduler
     }
 
     @Test
-    void shouldHandleDirectContractReviewFailureWhenContractNotFound() {
-        // Given
-        Long taskIdValue = 123L;
-        TaskId taskId = TaskId.of(taskIdValue);
-        Long contractId = 456L;
-
-        ContractReview contractReview = ContractReview.create(taskIdValue, contractId, "file-uuid-123");
-
-        when(contractReviewRepository.findById(taskId)).thenReturn(Optional.of(contractReview));
-
-        // When
-        contractReviewService.startContractReview(taskId);
-
-        // Then - should complete successfully since contract retrieval was removed
-        verify(taskManagementService).startTask(taskId);
-        verify(reviewResultRepository).save(any());
-        // completeTask is called within saveReviewResult
-        verify(taskManagementService).completeTask(taskId);
-    }
-
-    @Test
-    void shouldHandleDirectContractReviewFailureWhenRepositoryThrows() {
+    void shouldThrowExceptionWhenTaskNotFound() {
         // Given
         Long taskIdValue = 123L;
         TaskId taskId = TaskId.of(taskIdValue);
 
-        when(contractReviewRepository.findById(taskId))
-                .thenThrow(new RuntimeException("Database error"));
+        when(contractReviewRepository.findById(taskId)).thenReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> contractReviewService.startContractReview(taskId))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Database error");
-
-        // The exception occurs in getContractTask before task starts, so no task management calls
-        verify(taskManagementService, never()).startTask(any());
-        verify(taskManagementService, never()).failTask(any(), any());
-        verify(reviewResultRepository, never()).save(any());
-        verify(taskManagementService, never()).completeTask(any());
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("任务不存在");
     }
 
     @Test
-    void shouldHandleDirectReviewFailureCorrectly() {
+    void shouldHandleReviewFailureCorrectly() {
         // Given
         Long taskIdValue = 123L;
         TaskId taskId = TaskId.of(taskIdValue);
         String errorMessage = "Test error message";
 
         // When
-        contractReviewService.handleReviewFailureDirect(taskId, errorMessage);
+        contractReviewService.handleReviewFailure(taskId, errorMessage);
 
         // Then
         verify(taskManagementService).failTask(taskId, errorMessage);

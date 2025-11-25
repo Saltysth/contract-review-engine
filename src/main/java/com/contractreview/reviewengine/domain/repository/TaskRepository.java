@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.domain.repository;
 
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.Task;
@@ -92,5 +93,25 @@ public interface TaskRepository {
      * 删除所有任务
      */
     void deleteAll();
+
+    /**
+     * 查找所有非最终状态的任务（按阶段处理）
+     */
+    List<Task> findNonFinalStageTasks();
+
+    /**
+     * 查找可重试的失败任务
+     */
+    List<Task> findRetryableTasks();
+
+    /**
+     * 根据执行阶段查找任务
+     */
+    List<Task> findByCurrentStage(ExecutionStage stage);
+
+    /**
+     * 根据状态和执行阶段查找任务
+     */
+    List<Task> findByStatusAndCurrentStage(TaskStatus status, ExecutionStage stage);
 
 }

@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.infrastructure.persistence.repository;
 
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.infrastructure.persistence.entity.TaskEntity;
@@ -7,10 +8,12 @@ import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -71,5 +74,35 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
      * 根据任务ID删除任务
      */
     void deleteById(Long id);
+
+    /**
+     * 查找所有非最终状态的任务（按阶段处理）
+     */
+    @Query("SELECT t FROM TaskEntity t WHERE t.currentStage != :finalStage " +
+           "ORDER BY t.createdTime ASC")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<TaskEntity> findNonFinalStageTasks(@Param("finalStage") ExecutionStage finalStage);
+
+    /**
+     * 查找可重试的失败任务
+     */
+    @Query("SELECT t FROM TaskEntity t WHERE t.status = 'FAILED' " +
+           "AND JSON_EXTRACT(t.configuration, '$.retryPolicy.retryCount') < " +
+           "COALESCE(JSON_EXTRACT(t.configuration, '$.retryPolicy.maxRetries'), 3) " +
+           "AND (JSON_EXTRACT(t.configuration, '$.retryPolicy.nextRetryTime') IS NULL OR " +
+           "JSON_UNQUOTE(JSON_EXTRACT(t.configuration, '$.retryPolicy.nextRetryTime')) <= CAST(:now AS VARCHAR)) " +
+           "ORDER BY t.updatedTime ASC")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<TaskEntity> findRetryableTasks(@Param("now") LocalDateTime now);
+
+    /**
+     * 根据执行阶段查找任务
+     */
+    List<TaskEntity> findByCurrentStage(ExecutionStage currentStage);
+
+    /**
+     * 根据状态和执行阶段查找任务
+     */
+    List<TaskEntity> findByStatusAndCurrentStage(TaskStatus status, ExecutionStage currentStage);
 
 }
