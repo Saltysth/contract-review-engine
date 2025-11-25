@@ -51,6 +51,12 @@ public class TaskEntity {
     @Column(name = "task_status", nullable = false)
     private TaskStatus status;
 
+    /**
+     * @deprecated 当前执行阶段字段已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
+     * 请使用任务状态来跟踪任务进度。此字段将在未来的版本中被移除。
+     * @since 1.0.0
+     */
+    @Deprecated
     @Enumerated(EnumType.STRING)
     @Column(name = "current_stage", nullable = false)
     private ExecutionStage currentStage;

@@ -12,10 +12,16 @@ import java.util.List;
 
 /**
  * 审查管道主控制器
+ * @deprecated 此类已被弃用。请使用 {@link com.contractreview.reviewengine.application.service.ContractReviewService} 中的简化方法进行合同审查。
+ * 该管道架构过于复杂且未完全实现，将被替换为直接的合同审查处理方式。
+ * 迁移指南：使用 {@code startContractReviewDirect()} 方法替代多阶段管道处理。
+ * @since 1.0.0
+ * @see com.contractreview.reviewengine.application.service.ContractReviewService#startContractReviewDirect
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class ReviewPipeline {
     
     private final List<PipelineStage> stages;

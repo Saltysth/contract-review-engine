@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * MapStruct映射器基础测试
  */
 @SpringBootTest
+@SuppressWarnings("deprecation")  // 在过渡期内允许使用已弃用的管道相关类进行测试
 class MapperTest {
 
     @Autowired

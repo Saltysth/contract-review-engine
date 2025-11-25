@@ -37,7 +37,13 @@ public class TaskDto {
     @Schema(description = "任务状态")
     private TaskStatus status;
 
-    @Schema(description = "当前执行阶段")
+    /**
+     * @deprecated 当前执行阶段字段已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
+     * 请使用任务状态来跟踪任务进度。此字段将在未来的版本中被移除。
+     * @since 1.0.0
+     */
+    @Schema(description = "当前执行阶段 (已弃用)")
+    @Deprecated
     private ExecutionStage currentStage;
 
     @Schema(description = "任务配置")
@@ -54,7 +60,13 @@ public class TaskDto {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime completedAt;
 
-    @Schema(description = "审查进度")
+    /**
+     * @deprecated 审查进度字段已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
+     * 请使用任务状态来跟踪任务进度。此字段将在未来的版本中被移除。
+     * @since 1.0.0
+     */
+    @Schema(description = "审查进度 (已弃用)")
+    @Deprecated
     private ReviewProgress progress;
 
     @Schema(description = "审计信息")

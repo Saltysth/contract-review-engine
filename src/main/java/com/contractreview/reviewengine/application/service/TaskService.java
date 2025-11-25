@@ -180,7 +180,15 @@ public class TaskService {
 
     /**
      * 更新任务当前阶段
+     * @deprecated 此方法已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
+     * 请使用任务状态变更来跟踪任务进度。
+     * 迁移指南：使用 {@link #startTask(TaskId)}、{@link #completeTask(TaskId)}、{@link #failTask(TaskId, String)} 来管理任务状态。
+     * @since 1.0.0
+     * @see #startTask(TaskId)
+     * @see #completeTask(TaskId)
+     * @see #failTask(TaskId, String)
      */
+    @Deprecated(since = "1.0.0", forRemoval = true)
     public void updateTaskStage(TaskId taskId, com.contractreview.reviewengine.domain.enums.ExecutionStage stage) {
         Task task = getTaskById(taskId);
         task.updateCurrentStage(stage);

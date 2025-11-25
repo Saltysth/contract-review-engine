@@ -10,11 +10,17 @@ import java.util.Map;
 
 /**
  * 审查进度值对象
- * 
+ *
  * @author SaltyFish
+ * @deprecated 此值对象已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
+ * 此值对象跟踪多阶段管道的执行进度，在简化的处理方式中不再需要阶段性进度跟踪。
+ * 迁移指南：使用简单的任务状态（PENDING、RUNNING、COMPLETED、FAILED）来跟踪审查进度。
+ * @since 1.0.0
+ * @see com.contractreview.reviewengine.domain.enums.TaskStatus
  */
 @Value
 @Builder
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class ReviewProgress {
     
     ExecutionStage currentStage;

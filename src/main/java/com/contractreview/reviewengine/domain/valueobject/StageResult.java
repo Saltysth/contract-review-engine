@@ -10,11 +10,17 @@ import java.util.Map;
 
 /**
  * 阶段执行结果值对象
- * 
+ *
  * @author SaltyFish
+ * @deprecated 此值对象已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
+ * 此值对象表示单个管道阶段的执行结果，在简化的处理方式中不再需要。
+ * 迁移指南：使用 {@link ReviewResult} 直接存储审查结果，无需阶段性结果。
+ * @since 1.0.0
+ * @see com.contractreview.reviewengine.domain.model.ReviewResult
  */
 @Value
 @Builder
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class StageResult {
     
     ExecutionStage stage;

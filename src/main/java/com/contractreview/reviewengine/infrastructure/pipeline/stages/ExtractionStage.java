@@ -16,10 +16,16 @@ import java.util.Map;
 
 /**
  * 条款提取阶段
+ * @deprecated 此阶段已被弃用。请使用 {@link com.contractreview.reviewengine.application.service.ContractReviewService} 中的简化方法进行合同审查。
+ * 该多阶段管道处理方式将被替换为直接的合同审查处理。
+ * 迁移指南：使用 {@code startContractReviewDirect()} 方法替代此阶段的处理逻辑。
+ * @since 1.0.0
+ * @see com.contractreview.reviewengine.application.service.ContractReviewService#startContractReviewDirect
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class ExtractionStage implements PipelineStage {
     
     @Override
