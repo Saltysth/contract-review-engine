@@ -85,14 +85,16 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
 
     /**
      * 查找可重试的失败任务
+     * 适配PostgreSQL 15的JSON操作+时间类型对比
      */
-    @Query("SELECT t FROM TaskEntity t WHERE t.status = 'FAILED' " +
-           "AND JSON_EXTRACT(t.configuration, '$.retryPolicy.retryCount') < " +
-           "COALESCE(JSON_EXTRACT(t.configuration, '$.retryPolicy.maxRetries'), 3) " +
-           "AND (JSON_EXTRACT(t.configuration, '$.retryPolicy.nextRetryTime') IS NULL OR " +
-           "JSON_UNQUOTE(JSON_EXTRACT(t.configuration, '$.retryPolicy.nextRetryTime')) <= CAST(:now AS VARCHAR)) " +
-           "ORDER BY t.updatedTime ASC")
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query(value = "SELECT t.* FROM task t WHERE t.task_status = 'FAILED' " +
+        "AND (t.configuration -> 'retryPolicy' ->> 'retryCount')::INTEGER < " +
+        "COALESCE((t.configuration -> 'retryPolicy' ->> 'maxRetries')::INTEGER, 3) " +
+        "AND (t.configuration -> 'retryPolicy' ->> 'nextRetryTime' IS NULL OR " +
+        "     (t.configuration -> 'retryPolicy' ->> 'nextRetryTime')::TIMESTAMP <= :now) " +
+        "ORDER BY t.updated_time ASC " +
+        "FOR UPDATE",
+        nativeQuery = true)
     List<TaskEntity> findRetryableTasks(@Param("now") LocalDateTime now);
 
     /**
