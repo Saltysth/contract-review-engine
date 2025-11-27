@@ -251,15 +251,7 @@ public class Task {
 
     /**
      * 更新当前执行阶段
-     * @deprecated 此方法已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
-     * 请使用任务状态变更来跟踪任务进度。
-     * 迁移指南：使用 {@code start()}、{@code complete()}、{@code fail()} 等方法来管理任务状态。
-     * @since 1.0.0
-     * @see #start()
-     * @see #complete()
-     * @see #fail(String)
      */
-    @Deprecated(since = "1.0.0", forRemoval = true)
     public void updateCurrentStage(ExecutionStage stage) {
         if (stage == null) {
             throw new IllegalArgumentException("Stage cannot be null");
