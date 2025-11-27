@@ -85,6 +85,13 @@
             <artifactId>contract-common</artifactId>
             <version>0.0.1</version>
         </dependency>
+
+        <!-- Contract Exception Handler -->
+        <dependency>
+            <groupId>com.saltyfish</groupId>
+            <artifactId>contract-exception-handler</artifactId>
+            <version>0.0.1</version>
+        </dependency>
         
         <!-- Lombok -->
         <dependency>

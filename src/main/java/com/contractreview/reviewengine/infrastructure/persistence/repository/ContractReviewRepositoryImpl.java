@@ -61,4 +61,10 @@ public class ContractReviewRepositoryImpl implements ContractReviewRepository {
         jpaRepository.deleteById(taskId.getValue());
     }
 
+    @Override
+    public Optional<ContractReview> findByTaskId(TaskId taskId) {
+        return jpaRepository.findByTaskId(taskId.getValue())
+                .map(converter::toDomain);
+    }
+
 }

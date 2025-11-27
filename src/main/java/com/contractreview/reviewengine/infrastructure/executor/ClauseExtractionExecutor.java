@@ -1,16 +1,20 @@
 package com.contractreview.reviewengine.infrastructure.executor;
 
-import com.contract.common.feign.ContractFeignClient;
+import com.contract.common.constant.ExtractionStatus;
+import com.contract.common.dto.TriggerClauseExtractionResponse;
+import com.contract.common.feign.ClauseExtractionFeignClient;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
+import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
+import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraService;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 条款抽取执行器
@@ -24,7 +28,9 @@ import java.util.Map;
 public class ClauseExtractionExecutor {
 
     private final TaskRepository taskRepository;
-    private final ContractFeignClient contractFeignClient;
+    private final ClauseExtractionFeignClient clauseExtractionFeignClient;
+    private final ContractTaskInfraService contractTaskInfraService;
+    private ContractReview contractTask;
 
     /**
      * 批量处理条款抽取任务
@@ -67,22 +73,20 @@ public class ClauseExtractionExecutor {
         log.debug("开始执行任务 {} 的条款抽取", task.getId());
 
         try {
+            contractTask = contractTaskInfraService.findContractTaskByTaskId(task.getId());
             // 执行条款抽取逻辑
-            performClauseExtraction(task);
+            boolean result = performClauseExtraction();
 
-            // 保存阶段结果（无论业务结果如何都保存）
-            saveStageResult(task, Map.of(
-                "stage", "CLAUSE_EXTRACTION",
-                "status", "COMPLETED",
-                "message", "条款抽取完成"
-            ));
 
-            // 更新到下一阶段
-            task.updateCurrentStage(ExecutionStage.MODEL_REVIEW);
-            task.complete(); // 当前阶段完成（程序执行成功）
-            taskRepository.save(task);
 
-            log.info("任务 {} 条款抽取阶段完成，已推进到模型审查阶段", task.getId());
+            if (result) {
+                // 更新到下一阶段
+                task.updateCurrentStage(ExecutionStage.MODEL_REVIEW);
+                task.complete(); // 当前阶段完成（程序执行成功）
+                taskRepository.save(task);
+
+                log.info("任务 {} 条款抽取阶段完成，已推进到模型审查阶段", task.getId());
+            }
 
         } catch (Exception e) {
             // 程序执行失败，标记任务为失败状态以触发重试
@@ -94,43 +98,31 @@ public class ClauseExtractionExecutor {
 
     /**
      * 执行具体的条款抽取逻辑
+     *
+     * @return
      */
-    private void performClauseExtraction(Task task) {
+    private boolean performClauseExtraction() {
         try {
             // 获取合同信息
-            Long contractId = getContractIdFromTask(task);
+            Long contractId = contractTask.getContractId();
             if (contractId == null) {
                 throw new IllegalArgumentException("无法获取合同ID");
             }
 
             // 调用外部服务进行条款抽取
-            // 这里是示例逻辑，实际实现需要根据具体的AI服务接口调整
             log.debug("调用条款抽取服务处理合同 {}", contractId);
+            TriggerClauseExtractionResponse extractionResult = clauseExtractionFeignClient.triggerClauseExtraction(contractId);
 
-            // 模拟条款抽取处理
-            // 实际应该调用AI服务或条款抽取服务
-            var extractionResult = simulateClauseExtraction(contractId);
-
-            log.debug("合同 {} 条款抽取完成，抽取到 {} 个条款", contractId, extractionResult.size());
-
+            log.debug("合同 {} 条款抽取状态为: {}，抽取到 {} 个条款", contractId, extractionResult.getExtractionStatus(), extractionResult.getExtractedClauseNumber());
+            // TODO 现在的逻辑是有抽取任务进行中就不重新触发，后续可以加redis来加上次数标记，一定轮次后强制重试或者并日志报错。
+            if (extractionResult.getExtractionStatus().equals(ExtractionStatus.COMPLETED.name())) {
+                return true;
+            } else {
+                return false;
+            }
         } catch (Exception e) {
             log.error("条款抽取失败: {}", e.getMessage(), e);
             throw new RuntimeException("条款抽取失败: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 保存阶段结果
-     */
-    private void saveStageResult(Task task, Object result) {
-        try {
-            log.debug("保存任务 {} 的条款抽取阶段结果", task.getId());
-            // 这里需要根据实际的阶段结果存储逻辑来实现
-            // 可以将结果存储到review_result表中
-            // 暂时只记录日志
-        } catch (Exception e) {
-            log.warn("保存阶段结果失败: {}", e.getMessage());
-            // 阶段结果保存失败不应该影响主流程
         }
     }
 
@@ -152,30 +144,5 @@ public class ClauseExtractionExecutor {
         }
     }
 
-    /**
-     * 从任务中获取合同ID
-     */
-    private Long getContractIdFromTask(Task task) {
-        // 这里需要根据实际的Task结构来获取合同ID
-        // 可能需要从Task的配置或其他字段中获取
-        // 暂时返回一个示例值
-        return 1L;
-    }
 
-    /**
-     * 模拟条款抽取过程
-     * 实际实现中应该调用真正的AI服务
-     */
-    private Map<String, Object> simulateClauseExtraction(Long contractId) {
-        // 模拟返回条款抽取结果
-        return Map.of(
-            "contractId", contractId,
-            "clauses", List.of(
-                Map.of("type", "支付条款", "content", "付款方式为月结"),
-                Map.of("type", "违约条款", "content", "逾期付款需支付违约金"),
-                Map.of("type", "保密条款", "content", "双方需对合同内容保密")
-            ),
-            "extractionTime", System.currentTimeMillis()
-        );
-    }
 }

@@ -41,7 +41,7 @@ public class TaskConverter {
                 .updatedBy(auditInfo != null ? auditInfo.getUpdatedBy() : null)
                 .createdTime(auditInfo != null ? auditInfo.getCreatedTime() : null)
                 .updatedTime(auditInfo != null ? auditInfo.getUpdatedTime() : null)
-                .objectVersionNumber(domain.getId() != null ? (auditInfo != null ? auditInfo.getObjectVersionNumber() : null) : null)
+                .objectVersionNumber(auditInfo != null ? auditInfo.getObjectVersionNumber() : 1L)
                 .build();
     }
 

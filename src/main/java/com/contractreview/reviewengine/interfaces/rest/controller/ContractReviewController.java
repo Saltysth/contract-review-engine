@@ -91,6 +91,20 @@ public class ContractReviewController {
         ContractReview contractReview = contractReviewService.getContractTask(id);
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
     }
+
+    /**
+     * 严格获取合同任务详情（通过taskId）
+     *
+     * 该方法严格验证taskId与contract_task之间的一一对应关系。
+     * 如果task存在但对应的contract_task不存在，将抛出BusinessException。
+     */
+    @GetMapping("/tasks/{taskId}/strict")
+    @Operation(summary = "严格获取任务详情", description = "通过taskId严格获取对应的合同审查任务，验证一一对应关系")
+    public ResponseEntity<ContractTaskDto> getContractTaskByTaskId(@PathVariable("taskId") Long taskId) {
+        TaskId id = TaskId.of(taskId);
+        ContractReview contractReview = contractReviewService.getContractTaskByTaskId(id);
+        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
+    }
     
     /**
      * 获取审查结果

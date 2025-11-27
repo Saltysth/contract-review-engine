@@ -88,7 +88,7 @@ public class TaskService {
      */
     public void retryTask(TaskId taskId) {
         Task task = getTaskById(taskId);
-
+        // TODO 不仅要重制任务状态，还需要把相关步骤的生成结果全部软删除。
         if (task.canRetry()) {
             task.retry();
             taskRepository.save(task);

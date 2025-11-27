@@ -14,6 +14,7 @@ import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.service.TaskManagementService;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
+import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraService;
 import com.contractreview.reviewengine.interfaces.rest.converter.ContractReviewConverter;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
@@ -43,6 +44,7 @@ public class ContractReviewService {
     private final ReviewResultRepository reviewResultRepository;
     private final ContractReviewConverter contractReviewConverter;
     private final TaskRepository taskRepository;
+    private final ContractTaskInfraService contractTaskInfraService;
     
     /**
      * 创建合同审查任务
@@ -51,13 +53,9 @@ public class ContractReviewService {
         ContractFeignDTO contract = contractFeignClient.createContract(requestDto.getFileUuid());
         Long contractId = contract.getId();
 
-        // 创建基础任务，初始状态设为条款抽取阶段
         TaskConfiguration config = TaskConfiguration.defaultTaskConfiguration();
+        // 创建基础任务，初始状态设为条款抽取阶段
         Task task = taskManagementService.createTask(TaskType.CLASSIFICATION, config);
-
-        // 设置任务初始执行阶段为条款抽取
-        task.updateCurrentStage(ExecutionStage.CLAUSE_EXTRACTION);
-        taskRepository.save(task);
 
         // 创建合同审查
         ContractReview contractReview = ContractReview.create(
@@ -80,6 +78,26 @@ public class ContractReviewService {
     public ContractReview getContractTask(TaskId taskId) {
         return contractReviewRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Contract review not found: " + taskId));
+    }
+
+    /**
+     * 根据任务ID严格查询对应的合同任务
+     *
+     * 该方法验证taskId与contract_task之间的一一对应关系。
+     * 如果task存在但对应的contract_task不存在，将抛出BusinessException。
+     *
+     * @param taskId 任务ID
+     * @return 对应的合同任务
+     * @throws BusinessException 当task存在但contract_task不存在时抛出
+     */
+    @Transactional(readOnly = true)
+    public ContractReview getContractTaskByTaskId(TaskId taskId) {
+        log.info("严格查询合同任务，taskId: {}", taskId.getValue());
+
+        ContractReview contractTask = contractTaskInfraService.findContractTaskByTaskId(taskId);
+
+        log.info("成功查询到合同任务，taskId: {}, contractId: {}", taskId.getValue(), contractTask.getContractId());
+        return contractTask;
     }
     
     /**

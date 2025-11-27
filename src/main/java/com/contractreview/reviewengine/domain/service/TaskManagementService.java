@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.domain.service;
 
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.Task;
@@ -29,6 +30,7 @@ public class TaskManagementService {
     public Task createTask(TaskType taskType, TaskConfiguration configuration) {
         String taskName = "Contract Review Task - " + taskType;
         Task task = Task.create(taskName, taskType, 1L); // TODO: 从安全上下文获取当前用户ID
+        task.updateCurrentStage(ExecutionStage.CLAUSE_EXTRACTION);
 
         if (configuration != null) {
             task.updateConfiguration(configuration);

@@ -31,4 +31,9 @@ public interface ContractTaskJpaRepository extends JpaRepository<ContractTaskEnt
     @Query("SELECT ct FROM ContractTaskEntity ct WHERE ct.contractId = :contractId ORDER BY ct.auditInfo.createdTime DESC")
     List<ContractTaskEntity> findLatestByContractId(@Param("contractId") Long contractId);
 
+    /**
+     * 根据任务ID查找合同任务
+     */
+    Optional<ContractTaskEntity> findByTaskId(Long taskId);
+
 }

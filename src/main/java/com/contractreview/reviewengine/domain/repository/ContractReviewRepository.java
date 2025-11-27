@@ -37,6 +37,11 @@ public interface ContractReviewRepository {
     List<ContractReview> findLatestByContractId(Long contractId);
 
     /**
+     * 根据任务ID查找合同任务实体（infra层专用）
+     */
+    Optional<ContractReview> findByTaskId(TaskId taskId);
+
+    /**
      * 删除合同审查
      */
     void delete(TaskId taskId);
