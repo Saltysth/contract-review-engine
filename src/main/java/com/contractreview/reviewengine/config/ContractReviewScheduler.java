@@ -42,14 +42,14 @@ public class ContractReviewScheduler {
     }
 
     /**
-     * 重试任务定时任务
+     * 重试任务定时任务 TODO
      * 30秒检查重试频率，处理可重试的失败任务
      */
     @Scheduled(fixedDelayString = "${contract.review.scheduler.retry-delay:30000}")
     public void retryFailedTasks() {
         try {
-            log.debug("开始执行重试任务检查");
-            contractReviewAggregatorProcessor.retryFailedTasks();
+            log.debug("重试检查未实现！开始执行重试任务检查");
+//            contractReviewAggregatorProcessor.retryFailedTasks();
         } catch (Exception e) {
             log.error("重试任务处理失败", e);
         }

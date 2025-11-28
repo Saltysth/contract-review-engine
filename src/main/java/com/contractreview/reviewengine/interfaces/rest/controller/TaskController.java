@@ -147,17 +147,6 @@ public class TaskController {
     }
 
     /**
-     * 重试任务
-     */
-    @PostMapping("/{taskId}/retry")
-    @Operation(summary = "重试任务", description = "重试失败的任务")
-    public ResponseEntity<Void> retryTask(@PathVariable Long taskId) {
-        TaskId id = TaskId.of(taskId);
-        taskService.retryTask(id);
-        return ResponseEntity.ok().build();
-    }
-
-    /**
      * 删除任务
      */
     @DeleteMapping("/{taskId}")

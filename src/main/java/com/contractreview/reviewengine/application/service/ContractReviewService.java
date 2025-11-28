@@ -1,6 +1,8 @@
 package com.contractreview.reviewengine.application.service;
 
 import com.contract.common.constant.ContractStatus;
+import com.contract.common.dto.DeleteClauseExtractionResponse;
+import com.contract.common.feign.ClauseExtractionFeignClient;
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
@@ -43,8 +45,9 @@ public class ContractReviewService {
     private final ContractReviewRepository contractReviewRepository;
     private final ReviewResultRepository reviewResultRepository;
     private final ContractReviewConverter contractReviewConverter;
-    private final TaskRepository taskRepository;
+    private final TaskService taskService;
     private final ContractTaskInfraService contractTaskInfraService;
+    private final ClauseExtractionFeignClient clauseExtractionFeignClient;
     
     /**
      * 创建合同审查任务
@@ -88,7 +91,7 @@ public class ContractReviewService {
      *
      * @param taskId 任务ID
      * @return 对应的合同任务
-     * @throws BusinessException 当task存在但contract_task不存在时抛出
+     * @throws com.contractreview.exception.core.BusinessException 当task存在但contract_task不存在时抛出
      */
     @Transactional(readOnly = true)
     public ContractReview getContractTaskByTaskId(TaskId taskId) {
@@ -158,12 +161,7 @@ public class ContractReviewService {
         log.info("启动合同审查任务，将由状态聚合执行器自动处理: {}", taskId);
 
         // 获取任务并验证状态
-        Optional<Task> taskOpt = taskRepository.findById(taskId);
-        if (taskOpt.isEmpty()) {
-            throw new IllegalArgumentException("任务不存在: " + taskId);
-        }
-
-        Task task = taskOpt.get();
+        Task task = taskService.getTaskById(taskId);
 
         // 验证任务是否处于待处理状态
         if (!task.isPending()) {
@@ -248,6 +246,36 @@ public class ContractReviewService {
         if (!ContractStatus.DRAFT.equals(requestDto.getContractStatus())) {
             log.warn("Contract task cannot be updated: {} (status is not draft)", requestDto.getContractId());
             throw new IllegalArgumentException("Contract task cannot be updated: status is not draft");
+        }
+    }
+
+    /**
+     * 重试任务
+     */
+    @Transactional
+    public void retryTask(TaskId taskId) {
+        Task task = taskService.getTaskById(taskId);
+        // 不仅要重制任务状态，还需要把相关步骤的生成结果全部软删除。
+        if (task.canRetry()) {
+            taskService.retryTask(task);
+            // FUTURE 以后可能不止一种类型
+            ContractReview contractReview = contractTaskInfraService.findContractTaskByTaskId(taskId);
+            DeleteClauseExtractionResponse deleteClauseExtractionResponse =
+                clauseExtractionFeignClient.deleteClauseExtraction(contractReview.getContractId());
+
+            if (!deleteClauseExtractionResponse.getSuccess()) {
+                log.info("重置任务状态失败， contractId:{}", contractReview.getContractId());
+            } else {
+                log.info("重置任务状态成功， contractId:{}", contractReview.getContractId());
+            }
+
+            int retryCount = task.getConfiguration() != null && task.getConfiguration().getRetryPolicy() != null
+                ? task.getConfiguration().getRetryPolicy().getRetryCount()
+                : 0;
+            log.info("Retrying task: {} (attempt {})", taskId, retryCount);
+        } else {
+            log.warn("Task cannot be retried: {} (max retries exceeded)", taskId);
+            throw new IllegalStateException("Task cannot be retried: max retries exceeded");
         }
     }
 }

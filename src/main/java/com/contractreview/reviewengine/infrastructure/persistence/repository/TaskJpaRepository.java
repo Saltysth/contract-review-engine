@@ -79,7 +79,7 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
      * 查找所有非最终状态的任务（按阶段处理）
      * 只查找PENDING状态的任务，因为只有PENDING状态的任务才需要被处理
      */
-    @Query("SELECT t FROM TaskEntity t WHERE t.currentStage != :finalStage AND t.status = com.contractreview.reviewengine.domain.enums.TaskStatus.PENDING " +
+    @Query("SELECT t FROM TaskEntity t WHERE t.currentStage != :finalStage AND (t.status = com.contractreview.reviewengine.domain.enums.TaskStatus.PENDING OR t.status = com.contractreview.reviewengine.domain.enums.TaskStatus.RUNNING) " +
            "ORDER BY t.createdTime ASC")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<TaskEntity> findNonFinalStageTasks(@Param("finalStage") ExecutionStage finalStage);

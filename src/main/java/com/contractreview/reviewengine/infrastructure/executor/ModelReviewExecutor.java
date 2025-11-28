@@ -40,7 +40,8 @@ public class ModelReviewExecutor {
 
         for (Task task : tasks) {
             try {
-                processSingleTask(task);
+                log.info("未实现模型审查");
+//                processSingleTask(task);
                 successCount++;
                 log.debug("任务 {} 模型审查处理成功", task.getId());
 

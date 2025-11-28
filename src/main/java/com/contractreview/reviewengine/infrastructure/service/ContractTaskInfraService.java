@@ -5,6 +5,7 @@ import com.contractreview.exception.enums.CommonErrorCode;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class ContractTaskInfraService {
      * @return 对应的合同任务
      * @throws BusinessException 当task存在但contract_task不存在时抛出
      */
+    @NotNull
     public ContractReview findContractTaskByTaskId(TaskId taskId) {
         if (taskId == null) {
             throw new BusinessException(CommonErrorCode.PARAM_INVALID, "任务ID不能为空");

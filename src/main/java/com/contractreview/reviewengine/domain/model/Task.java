@@ -159,6 +159,14 @@ public class Task {
     }
 
     /**
+     * 重置任务
+     */
+    public void reset() {
+        this.status = TaskStatus.PENDING;
+        updateAuditInfo();
+    }
+
+    /**
      * 检查是否可以重试
      */
     public boolean canRetry() {
@@ -258,7 +266,7 @@ public class Task {
         }
 
         this.currentStage = stage;
-        updateAuditInfo();
+        reset();
     }
 
     /**

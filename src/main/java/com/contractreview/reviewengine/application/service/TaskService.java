@@ -1,11 +1,15 @@
 package com.contractreview.reviewengine.application.service;
 
+import com.contract.common.dto.DeleteClauseExtractionResponse;
+import com.contract.common.feign.ClauseExtractionFeignClient;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
+import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
+import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +30,8 @@ import java.util.List;
 public class TaskService {
 
     private final TaskRepository taskRepository;
+    private final ContractTaskInfraService contractTaskInfraService;
+    private final ClauseExtractionFeignClient clauseExtractionFeignClient;
 
     /**
      * 创建新任务
@@ -86,18 +92,13 @@ public class TaskService {
     /**
      * 重试任务
      */
-    public void retryTask(TaskId taskId) {
-        Task task = getTaskById(taskId);
-        // TODO 不仅要重制任务状态，还需要把相关步骤的生成结果全部软删除。
+    public void retryTask(Task task) {
+        // 不仅要重制任务状态，还需要把相关步骤的生成结果全部软删除。
         if (task.canRetry()) {
             task.retry();
             taskRepository.save(task);
-            int retryCount = task.getConfiguration() != null && task.getConfiguration().getRetryPolicy() != null
-                    ? task.getConfiguration().getRetryPolicy().getRetryCount()
-                    : 0;
-            log.info("Retrying task: {} (attempt {})", taskId, retryCount);
         } else {
-            log.warn("Task cannot be retried: {} (max retries exceeded)", taskId);
+            log.warn("Task cannot be retried: {} (max retries exceeded)", task.getId());
             throw new IllegalStateException("Task cannot be retried: max retries exceeded");
         }
     }

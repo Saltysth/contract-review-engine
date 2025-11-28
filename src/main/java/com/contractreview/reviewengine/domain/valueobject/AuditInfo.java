@@ -53,7 +53,7 @@ public class AuditInfo {
      * 更新审计信息
      */
     public AuditInfo update(Long userId) {
-        Long newVersion = (this.objectVersionNumber == null) ? 1L : this.objectVersionNumber + 1;
+        Long newVersion = (this.objectVersionNumber == null) ? 1L : this.objectVersionNumber;
         return new AuditInfo(this.createdBy, this.createdTime, userId, LocalDateTime.now(), newVersion);
     }
 }
