@@ -13,6 +13,8 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER:localhost:18848}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:SaltyLin}
         group: CONTRACT_REVIEW
 
     openfeign:
