@@ -152,21 +152,6 @@ app:
       - txt
     max-file-size-mb: 50
     
-    # 外部服务配置
-    external-services:
-      llm-api:
-        base-url: ${LLM_API_BASE_URL:http://localhost:8081}
-        timeout-seconds: 120
-        max-retries: 3
-      
-      file-storage:
-        base-url: ${FILE_STORAGE_BASE_URL:http://localhost:8082}
-        timeout-seconds: 30
-      
-      contract-management:
-        base-url: ${CONTRACT_MANAGEMENT_BASE_URL:http://localhost:8083}
-        timeout-seconds: 15
-
     # 通知配置
     notifications:
       enabled: true

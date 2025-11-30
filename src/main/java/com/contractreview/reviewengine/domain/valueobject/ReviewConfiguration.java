@@ -34,6 +34,9 @@ public class ReviewConfiguration {
 
     private List<String> reviewRules;
 
+    /**
+     * 会影响审查等速度和质量
+     */
     private PromptTemplateType promptTemplate;
 
     private Boolean enableTerminology;

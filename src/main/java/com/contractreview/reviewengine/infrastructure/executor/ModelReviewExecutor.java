@@ -1,13 +1,28 @@
 package com.contractreview.reviewengine.infrastructure.executor;
 
+import com.contract.common.feign.ClauseFeignClient;
+import com.contract.common.feign.PromptFeignClient;
+import com.contract.common.feign.ReviewRuleFeignClient;
+import com.contract.common.feign.dto.ClauseFeignDTO;
+import com.contract.common.feign.dto.PromptFeignDTO;
+import com.contract.common.feign.dto.PromptPageResultFeignDTO;
+import com.contract.common.feign.dto.PromptQueryFeignDTO;
+import com.contract.common.feign.dto.ReviewRuleFeignDTO;
+import com.contract.common.feign.dto.ReviewRulePageResultFeignDTO;
+import com.contract.common.feign.dto.ReviewRuleQueryFeignDTO;
+import com.contractreview.reviewengine.application.service.ContractReviewService;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
+import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
+import com.contractreview.reviewengine.domain.valueobject.ModelReviewResult;
+import com.contractreview.reviewengine.domain.valueobject.ReviewConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +38,10 @@ import java.util.Map;
 public class ModelReviewExecutor {
 
     private final TaskRepository taskRepository;
+    private final ContractReviewService contractReviewService;
+    private final ReviewRuleFeignClient reviewRuleFeignClient;
+    private final ClauseFeignClient clauseFeignClient;
+    private final PromptFeignClient promptFeignClient;
 
     /**
      * 批量处理模型审查任务
@@ -41,7 +60,7 @@ public class ModelReviewExecutor {
         for (Task task : tasks) {
             try {
                 log.info("未实现模型审查");
-//                processSingleTask(task);
+                processSingleTask(task);
                 successCount++;
                 log.debug("任务 {} 模型审查处理成功", task.getId());
 
@@ -66,18 +85,21 @@ public class ModelReviewExecutor {
         log.debug("开始执行任务 {} 的模型审查", task.getId());
 
         try {
-            // 获取上一阶段的条款抽取结果
-            Object extractionResult = getStageResult(task, ExecutionStage.CLAUSE_EXTRACTION);
-            if (extractionResult == null) {
-                throw new IllegalStateException("无法获取条款抽取结果，无法进行模型审查");
+            ContractReview contractTask = contractReviewService.getContractTask(task.getId());
+            String prompt = arrangePrompt(contractTask);
+            if (null == prompt) {
+                log.error("没有合适的提示词用于模型审查，进行快速失败");
+                throw new RuntimeException("没有合适的提示词用于模型审查");
             }
 
-            // 执行AI审查
-            Map<String, Object> reviewResult = performAIReview(task, extractionResult);
+            // TODO OperationLog 替换日志并降低日志等级
+            log.info("contractTask:{}, 模型审查提示词：{}", contractTask.getId(), prompt);
 
-            // 保存阶段结果（无论业务结果如何都保存）
-            // 业务结果可能包含：风险等级、合规问题、通过/不通过等
-            saveStageResult(task, reviewResult);
+            // 执行AI审查
+            ModelReviewResult reviewResult = performAIReview(task, contractTask);
+
+            // 保存阶段结果（无论业务结果如何都保存）业务结果可能包含：风险等级、合规问题、通过/不通过等
+            saveStageResult(task, contractTask, reviewResult);
 
             // 更新到下一阶段
             task.updateCurrentStage(ExecutionStage.REPORT_GENERATION);
@@ -89,33 +111,138 @@ public class ModelReviewExecutor {
         } catch (Exception e) {
             // 程序执行失败，标记任务为失败状态以触发重试
             task.fail("模型审查程序执行失败: " + e.getMessage());
-            taskRepository.save(task);
             throw e; // 重新抛出异常，让上层处理
+        } finally {
+            taskRepository.save(task);
         }
+    }
+
+    private String arrangePrompt(ContractReview contractTask) {
+        String prompt = "";
+        ReviewRuleQueryFeignDTO reviewRuleQueryFeignDTO = getReviewRuleQueryFeignDTO(contractTask);
+        ReviewRulePageResultFeignDTO ruleResult =
+            reviewRuleFeignClient.searchReviewRules(reviewRuleQueryFeignDTO);
+        List<ReviewRuleFeignDTO> rules = ruleResult.getRecords();
+
+        // 获取条款
+        List<ClauseFeignDTO> clauses =
+            clauseFeignClient.getClausesByContractId(contractTask.getContractId());
+
+        PromptQueryFeignDTO queryFeignDTO = new PromptQueryFeignDTO();
+        // 合同类型+提示词 即为提示词的模型审查命名规则 并且
+//        queryFeignDTO.setKeyword(reviewConfiguration.getContractType() + "提示词");
+        // FIXME 测试用
+        queryFeignDTO.setKeyword("其他合同提示词");
+        queryFeignDTO.setEnabled(true);
+        queryFeignDTO.setPromptTypeList(List.of("INNER"));
+        queryFeignDTO.setPageSize(Integer.MAX_VALUE);
+        PromptPageResultFeignDTO systemPrompts = promptFeignClient.searchPrompts(queryFeignDTO);
+        List<PromptFeignDTO> prompts = systemPrompts.getRecords();
+        if (prompts == null || prompts.size() != 1) {
+            log.error("模型审查查询提示词遇到错误");
+            return null;
+        }
+
+        // 根据条款类型聚合条款和规则
+        Map<String, List<ClauseFeignDTO>> clausesByType = new java.util.HashMap<>();
+        Map<String, List<ReviewRuleFeignDTO>> rulesByType = new java.util.HashMap<>();
+
+        // 按条款类型聚合条款
+        if (clauses != null && !clauses.isEmpty()) {
+            for (ClauseFeignDTO clause : clauses) {
+                String clauseType = clause.getClauseType();
+                if (clauseType != null) {
+                    clausesByType.computeIfAbsent(clauseType, k -> new ArrayList<>()).add(clause);
+                }
+            }
+        }
+
+        // 按条款类型聚合规则，一个规则可以应用在多个条款类型
+        if (rules != null && !rules.isEmpty()) {
+            for (ReviewRuleFeignDTO rule : rules) {
+                List<String> applicableClauseTypes = rule.getApplicableClauseTypes();
+                if (applicableClauseTypes != null && !applicableClauseTypes.isEmpty()) {
+                    // 一个规则可以应用在多个条款类型中
+                    for (String clauseType : applicableClauseTypes) {
+                        if (clauseType != null) {
+                            rulesByType.computeIfAbsent(clauseType, k -> new ArrayList<>()).add(rule);
+                        }
+                    }
+                }
+            }
+        }
+
+        // 构建动态提示词
+        PromptFeignDTO systemPrompt = prompts.get(0);
+        String promptContent = systemPrompt.getPromptContent();
+
+        StringBuilder dynamicPrompt = new StringBuilder(promptContent);
+        dynamicPrompt.append("\n\n=== 合同条款信息 ===\n");
+
+        // 按条款类型组织条款信息
+        for (Map.Entry<String, List<ClauseFeignDTO>> entry : clausesByType.entrySet()) {
+            String clauseType = entry.getKey();
+            List<ClauseFeignDTO> typeClauses = entry.getValue();
+
+            dynamicPrompt.append(String.format("\n【%s条款】(%d条):\n", clauseType, typeClauses.size()));
+            for (ClauseFeignDTO clause : typeClauses) {
+                dynamicPrompt.append(String.format("- %s: %s\n",
+                    clause.getClauseTitle() != null ? clause.getClauseTitle() : "无标题",
+                    clause.getClauseContent() != null ? clause.getClauseContent() : "无内容"));
+            }
+        }
+
+        dynamicPrompt.append("\n=== 审查规则 ===\n");
+
+        // 按条款类型组织规则信息
+        for (Map.Entry<String, List<ReviewRuleFeignDTO>> entry : rulesByType.entrySet()) {
+            String ruleClauseType = entry.getKey();
+            List<ReviewRuleFeignDTO> typeRules = entry.getValue();
+
+            dynamicPrompt.append(String.format("\n【%s规则】(%d条):\n", ruleClauseType, typeRules.size()));
+            for (ReviewRuleFeignDTO rule : typeRules) {
+                dynamicPrompt.append(String.format("- %s: %s\n",
+                    rule.getRuleName() != null ? rule.getRuleName() : "无名称",
+                    rule.getRuleContent() != null ? rule.getRuleContent() : "无描述"));
+            }
+        }
+
+        prompt = dynamicPrompt.toString();
+
+        return prompt;
+    }
+
+    private static ReviewRuleQueryFeignDTO getReviewRuleQueryFeignDTO(ContractReview contractTask) {
+        ReviewConfiguration reviewConfiguration = contractTask.getReviewConfiguration();
+        // 审查规则, 根据合同类型、条款类型、模式编码、enable来筛选审查规则
+        ReviewRuleQueryFeignDTO reviewRuleQueryFeignDTO = new ReviewRuleQueryFeignDTO();
+        reviewRuleQueryFeignDTO.setContractType(reviewConfiguration.getContractType());
+        reviewRuleQueryFeignDTO.setClauseType(reviewConfiguration.getContractType());
+        reviewRuleQueryFeignDTO.setEnabled(true);
+        reviewRuleQueryFeignDTO.setPromptModeCodeList(List.of(reviewConfiguration.getPromptTemplate().getCode()));
+        reviewRuleQueryFeignDTO.setPageSize(Integer.MAX_VALUE);
+        return reviewRuleQueryFeignDTO;
     }
 
     /**
      * 执行AI模型审查
      */
-    private Map<String, Object> performAIReview(Task task, Object extractionResult) {
+    private ModelReviewResult performAIReview(Task task, ContractReview contractTask) {
         try {
-            Long contractId = getContractIdFromTask(task);
+            Long contractId = contractTask.getId();
             if (contractId == null) {
                 throw new IllegalArgumentException("无法获取合同ID");
             }
 
             log.debug("调用AI审查服务处理合同 {}", contractId);
 
-            // 模拟AI服务调用
-            // TODO: 实际实现中需要调用AI服务
+            // TODO 调控二元变量：速度 质量
             // ApiResponse<ChatResponse> response = aiClient.chat(buildChatRequest(extractionResult));
-            // 处理AI响应...
 
-            var aiReviewResult = simulateAIReview(contractId, extractionResult);
+            ModelReviewResult modelReviewResult = new ModelReviewResult();
 
-            log.debug("合同 {} AI审查完成，风险等级: {}", contractId, aiReviewResult.get("riskLevel"));
-
-            return aiReviewResult;
+            log.debug("合同 {} AI审查完成，总体风险等级: {}", contractId);
+            return modelReviewResult;
 
         } catch (Exception e) {
             log.error("AI模型审查失败: {}", e.getMessage(), e);
@@ -123,33 +250,11 @@ public class ModelReviewExecutor {
         }
     }
 
-    /**
-     * 获取指定阶段的结果
-     */
-    private Object getStageResult(Task task, ExecutionStage stage) {
-        try {
-            log.debug("获取任务 {} 的 {} 阶段结果", task.getId(), stage.name());
-            // 这里需要根据实际的阶段结果查询逻辑来实现
-            // 可以从review_result表中查询
-            // 暂时返回模拟数据
-            return Map.of(
-                "stage", stage.name(),
-                "contractId", getContractIdFromTask(task),
-                "clauses", List.of(
-                    Map.of("type", "支付条款", "content", "付款方式为月结"),
-                    Map.of("type", "违约条款", "content", "逾期付款需支付违约金")
-                )
-            );
-        } catch (Exception e) {
-            log.warn("获取阶段结果失败: {}", e.getMessage());
-            return null;
-        }
-    }
 
     /**
      * 保存阶段结果
      */
-    private void saveStageResult(Task task, Map<String, Object> result) {
+    private void saveStageResult(Task task, ContractReview contractTask, ModelReviewResult reviewResult) {
         try {
             log.debug("保存任务 {} 的模型审查阶段结果", task.getId());
             // 这里需要根据实际的阶段结果存储逻辑来实现
@@ -181,47 +286,5 @@ public class ModelReviewExecutor {
             log.error("保存任务失败状态时发生异常: {}", saveException.getMessage());
             // 如果保存失败，记录日志但不抛出异常，避免影响其他任务处理
         }
-    }
-
-    /**
-     * 从任务中获取合同ID
-     */
-    private Long getContractIdFromTask(Task task) {
-        // 这里需要根据实际的Task结构来获取合同ID
-        // 可能需要从Task的配置或其他字段中获取
-        // 暂时返回一个示例值
-        return 1L;
-    }
-
-    /**
-     * 模拟AI审查过程
-     * 实际实现中应该调用真正的AI服务
-     */
-    private Map<String, Object> simulateAIReview(Long contractId, Object extractionResult) {
-        // 模拟返回AI审查结果
-        return Map.of(
-            "contractId", contractId,
-            "riskLevel", "MEDIUM",
-            "riskScore", 65.5,
-            "complianceScore", 78.2,
-            "reviewItems", List.of(
-                Map.of(
-                    "category", "法律风险",
-                    "severity", "MEDIUM",
-                    "description", "付款条款存在歧义，建议明确具体付款时间"
-                ),
-                Map.of(
-                    "category", "合规性",
-                    "severity", "LOW",
-                    "description", "合同格式符合标准要求"
-                )
-            ),
-            "recommendations", List.of(
-                "建议明确付款具体时间和方式",
-                "建议添加违约责任的具体计算方法"
-            ),
-            "reviewTime", System.currentTimeMillis(),
-            "status", "COMPLETED"
-        );
     }
 }
