@@ -14,8 +14,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import com.contractreview.reviewengine.domain.valueobject.RiskItem;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,33 +42,29 @@ public class ReviewResult {
     
     @Column(name = "contract_id", nullable = false)
     private Long contractId;
-    
+
     @Column(name = "review_type", nullable = false, length = 50)
     private String reviewType;
-    
+
     @Column(name = "overall_risk_level", length = 20)
     private String overallRiskLevel;
-    
-    @Column(name = "risk_score", precision = 5, scale = 2)
-    private BigDecimal riskScore;
-    
-    @Column(name = "compliance_score", precision = 5, scale = 2)
-    private BigDecimal complianceScore;
+
+    @Column(name = "confidence", precision = 5, scale = 2)
+    private Double confidence;
     
     @Column(name = "summary", columnDefinition = "TEXT")
     private String summary;
     
     @Column(name = "recommendations", columnDefinition = "TEXT")
     private String recommendations;
-    
-    @Column(name = "extracted_entities", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
-    private Map<String, Object> extractedEntities;
-    
+
+    @Column(name = "stage_result", columnDefinition = "TEXT")
+    private String stageResult;
+
     @Column(name = "risk_items", columnDefinition = "JSONB")
     @Convert(converter = JsonConverter.class)
-    private Map<String, Object> riskItems;
-    
+    private List<RiskItem> riskItems;
+
     @Column(name = "compliance_issues", columnDefinition = "JSONB")
     @Convert(converter = JsonConverter.class)
     private Map<String, Object> complianceIssues;

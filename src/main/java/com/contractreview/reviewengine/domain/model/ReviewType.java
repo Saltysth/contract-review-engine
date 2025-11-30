@@ -9,12 +9,9 @@ import lombok.Getter;
  */
 @Getter
 public enum ReviewType {
-    
-    FULL_REVIEW("全面审查", "对合同进行全面的风险和合规审查"),
-    RISK_ANALYSIS("风险分析", "专注于合同风险识别和评估"),
-    COMPLIANCE_CHECK("合规检查", "检查合同是否符合法律法规要求"),
-    CLAUSE_EXTRACTION("条款提取", "提取和分析特定类型的合同条款"),
-    QUICK_SCAN("快速扫描", "快速识别合同中的关键风险点");
+
+    MODEL_REVIEW("模型审查", "使用AI模型进行合同审查"),
+    MANUAL_REVIEW("人工审查", "由人工专家进行合同审查");
     
     private final String displayName;
     private final String description;
@@ -25,16 +22,16 @@ public enum ReviewType {
     }
     
     /**
-     * 检查是否需要详细分析
+     * 检查是否为AI模型审查
      */
-    public boolean requiresDetailedAnalysis() {
-        return this == FULL_REVIEW || this == RISK_ANALYSIS;
+    public boolean isModelReview() {
+        return this == MODEL_REVIEW;
     }
-    
+
     /**
-     * 检查是否需要合规检查
+     * 检查是否为人工审查
      */
-    public boolean requiresComplianceCheck() {
-        return this == FULL_REVIEW || this == COMPLIANCE_CHECK;
+    public boolean isManualReview() {
+        return this == MANUAL_REVIEW;
     }
 }

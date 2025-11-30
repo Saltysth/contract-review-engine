@@ -2,7 +2,6 @@ package com.contractreview.reviewengine.interfaces.rest.dto;
 
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
-import com.contractreview.reviewengine.domain.valueobject.RiskAssessment;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -22,6 +21,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "合同审查结果")
+@Deprecated
 public class ReviewResultDto {
     
     @Schema(description = "任务ID", example = "550e8400-e29b-41d4-a716-446655440000")
@@ -29,10 +29,7 @@ public class ReviewResultDto {
     
     @Schema(description = "当前阶段")
     private ExecutionStage currentStage;
-    
-    @Schema(description = "风险评估")
-    private RiskAssessment riskAssessment;
-    
+
     @Schema(description = "提取的条款")
     private List<Map<String, Object>> extractedClauses;
     

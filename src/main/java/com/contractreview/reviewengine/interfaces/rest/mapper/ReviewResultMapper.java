@@ -23,13 +23,12 @@ public interface ReviewResultMapper {
     @Mapping(target = "summary", source = "summary")
     @Mapping(target = "recommendations", source = "recommendations")
     @Mapping(target = "currentStage", ignore = true)
-    @Mapping(target = "riskAssessment", ignore = true)
     @Mapping(target = "extractedClauses", ignore = true)
     @Mapping(target = "analysisResult", ignore = true)
     @Mapping(target = "auditInfo", ignore = true)
     @Mapping(target = "updatedTime", ignore = true)
     ReviewResultDto toDto(ReviewResult reviewResult);
-    
+
     /**
      * DTO转Domain对象
      */
@@ -38,11 +37,13 @@ public interface ReviewResultMapper {
     @Mapping(target = "contractId", ignore = true)
     @Mapping(target = "reviewType", ignore = true)
     @Mapping(target = "overallRiskLevel", ignore = true)
-    @Mapping(target = "riskScore", ignore = true)
-    @Mapping(target = "complianceScore", ignore = true)
-    @Mapping(target = "extractedEntities", ignore = true)
+    @Mapping(target = "confidence", ignore = true)
+    @Mapping(target = "summary", ignore = true)
+    @Mapping(target = "recommendations", ignore = true)
+    @Mapping(target = "stageResult", ignore = true)
     @Mapping(target = "riskItems", ignore = true)
     @Mapping(target = "complianceIssues", ignore = true)
+    @Mapping(target = "createdTime", ignore = true)
     ReviewResult toEntity(ReviewResultDto dto);
     
     /**
