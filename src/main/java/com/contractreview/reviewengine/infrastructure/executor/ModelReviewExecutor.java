@@ -19,6 +19,7 @@ import com.contract.common.feign.dto.ReviewRuleQueryFeignDTO;
 import com.contractreview.reviewengine.application.service.ContractReviewService;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.RiskLevel;
+import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.ReviewType;
@@ -73,7 +74,7 @@ public class ModelReviewExecutor {
 
         for (Task task : tasks) {
             try {
-                log.info("未实现模型审查");
+                log.info("准备模型审查");
                 processSingleTask(task);
                 successCount++;
                 log.debug("任务 {} 模型审查处理成功", task.getId());
@@ -92,9 +93,12 @@ public class ModelReviewExecutor {
      * 处理单个模型审查任务
      */
     private void processSingleTask(Task task) {
+        if (!task.getStatus().equals(TaskStatus.PENDING)) {
+            log.info("只执行待处理任务，当前任务：{}, 状态： {}", task.getId(), task.getStatus());
+            return;
+        }
         // 启动任务
         task.start();
-        taskRepository.save(task);
 
         log.debug("开始执行任务 {} 的模型审查", task.getId());
 
@@ -118,7 +122,6 @@ public class ModelReviewExecutor {
             // 更新到下一阶段
             task.updateCurrentStage(ExecutionStage.REPORT_GENERATION);
             task.complete(); // 当前阶段完成（程序执行成功）
-            taskRepository.save(task);
 
             log.info("任务 {} 模型审查阶段完成，已推进到报告生成阶段", task.getId());
 
@@ -145,7 +148,7 @@ public class ModelReviewExecutor {
         // 合同类型+提示词 即为提示词的模型审查命名规则 并且
 //        queryFeignDTO.setKeyword(reviewConfiguration.getContractType() + "提示词");
         // FIXME 测试用
-        queryFeignDTO.setKeyword("其他合同提示词");
+        queryFeignDTO.setPromptName("其他合同提示词");
         queryFeignDTO.setEnabled(true);
         queryFeignDTO.setPromptTypeList(List.of("INNER"));
         queryFeignDTO.setPageSize(Integer.MAX_VALUE);
