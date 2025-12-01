@@ -132,7 +132,6 @@ public class ModelReviewExecutor {
     }
 
     private String arrangePrompt(ContractReview contractTask) {
-        String prompt = "";
         ReviewRuleQueryFeignDTO reviewRuleQueryFeignDTO = getReviewRuleQueryFeignDTO(contractTask);
         ReviewRulePageResultFeignDTO ruleResult =
             reviewRuleFeignClient.searchReviewRules(reviewRuleQueryFeignDTO);
@@ -157,7 +156,7 @@ public class ModelReviewExecutor {
             return null;
         }
 
-        // 根据条款类型聚合条款和规则
+        // 根据条款类型聚合条款和规则 TODO 缺少对于规则类型的支持 例如兜底类型需要在没有相关条款提示词的情况下使用
         Map<String, List<ClauseFeignDTO>> clausesByType = new java.util.HashMap<>();
         Map<String, List<ReviewRuleFeignDTO>> rulesByType = new java.util.HashMap<>();
 
@@ -190,7 +189,7 @@ public class ModelReviewExecutor {
         PromptFeignDTO systemPrompt = prompts.get(0);
         String promptContent = systemPrompt.getPromptContent();
 
-        StringBuilder dynamicPrompt = new StringBuilder(promptContent);
+        StringBuilder dynamicPrompt = new StringBuilder();
         dynamicPrompt.append("\n\n=== 合同条款信息 ===\n");
 
         // 按条款类型组织条款信息
@@ -221,9 +220,9 @@ public class ModelReviewExecutor {
             }
         }
 
-        prompt = dynamicPrompt.toString();
+        promptContent = promptContent.replace("</ruleAndclause>", dynamicPrompt.toString());
 
-        return prompt;
+        return promptContent;
     }
 
     private static ReviewRuleQueryFeignDTO getReviewRuleQueryFeignDTO(ContractReview contractTask) {
@@ -250,7 +249,11 @@ public class ModelReviewExecutor {
 
             log.debug("调用AI审查服务处理合同 {}", contractId);
 
-            // TODO 调控二元变量：速度 质量
+            /**
+             * 标准 开启思考并且使用标准的提示词 TODO 审查合同条款外的项
+             * 快速 TODO 关闭思考模式，提示词为快速版本提示词，只审查合同条款
+             * 质量 TODO 开启思考模式，在报告生成前加一个复检流程
+             */
             ChatRequest.Message message = ChatRequest.Message.textMessage("user", prompt);
             ArrayList<ChatRequest.Message> messages = Lists.newArrayList();
             messages.add(message);
@@ -323,14 +326,14 @@ public class ModelReviewExecutor {
                 try {
                     Double confidence = Double.valueOf(String.valueOf(responseMap.get("confidence")));
                     if (confidence >= 0.0 && confidence <= 1.0) {
-                        reviewResult.setConfidence(confidence);
+                        reviewResult.setConfidence(java.math.BigDecimal.valueOf(confidence));
                     } else {
                         log.warn("置信度值超出范围[0,1]: {}, 使用默认值", confidence);
-                        reviewResult.setConfidence(0.5);
+                        reviewResult.setConfidence(java.math.BigDecimal.valueOf(0.5));
                     }
                 } catch (NumberFormatException e) {
                     log.warn("置信度格式错误: {}, 使用默认值", responseMap.get("confidence"));
-                    reviewResult.setConfidence(0.5);
+                    reviewResult.setConfidence(java.math.BigDecimal.valueOf(0.5));
                 }
             }
 

@@ -1,6 +1,5 @@
 package com.contractreview.reviewengine.infrastructure.executor;
 
-import com.contract.common.constant.ExtractionStatus;
 import com.contract.common.dto.TriggerClauseExtractionResponse;
 import com.contract.common.feign.ClauseExtractionFeignClient;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
@@ -9,7 +8,6 @@ import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraService;
-import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -73,30 +71,31 @@ public class ClauseExtractionExecutor {
             contractTask = contractTaskInfraService.findContractTaskByTaskId(task.getId());
 
             // 执行条款抽取逻辑
-            boolean result = performClauseExtraction(task);
+            TriggerClauseExtractionResponse result = performClauseExtraction(task);
+            String extractionStatus = result.getExtractionStatus();
 
-            if (result) {
+            if (extractionStatus.equals(TaskStatus.COMPLETED.name())) {
                 // 更新到下一阶段
                 task.updateCurrentStage(ExecutionStage.MODEL_REVIEW);
 
                 log.info("任务 {} 条款抽取阶段完成，已推进到模型审查阶段", task.getId());
+            } else if (extractionStatus.equals(TaskStatus.FAILED.name()) ||  extractionStatus.equals(TaskStatus.CANCELLED.name())) {
+                task.fail(result.getErrorMessage());
             }
-
-            taskRepository.save(task);
         } catch (Exception e) {
             // 程序执行失败，标记任务为失败状态以触发重试
             task.fail("条款抽取程序执行失败: " + e.getMessage());
-            taskRepository.save(task);
             throw e; // 重新抛出异常，让上层处理
+        } finally {
+            taskRepository.save(task);
         }
     }
 
     /**
      * 执行具体的条款抽取逻辑
      *
-     * @return
      */
-    private boolean performClauseExtraction(Task task) {
+    private TriggerClauseExtractionResponse performClauseExtraction(Task task) {
         try {
             // 获取合同信息
             Long contractId = contractTask.getContractId();
@@ -115,7 +114,7 @@ public class ClauseExtractionExecutor {
 
             log.debug("合同 {} 条款抽取状态为: {}，抽取到 {} 个条款", contractId, extractionResult.getExtractionStatus(), extractionResult.getExtractedClauseNumber());
             // TODO 现在的逻辑是有抽取任务进行中就不重新触发，后续可以加redis来加上次数标记，一定轮次后强制重试或者并日志报错。
-            return extractionResult.getExtractionStatus().equals(ExtractionStatus.COMPLETED.name());
+            return extractionResult;
         } catch (Exception e) {
             log.error("条款抽取失败: {}", e.getMessage(), e);
             throw new RuntimeException("条款抽取失败: " + e.getMessage(), e);

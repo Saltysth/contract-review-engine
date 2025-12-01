@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import com.contractreview.reviewengine.domain.valueobject.RiskItem;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class ReviewResult {
     private String overallRiskLevel;
 
     @Column(name = "confidence", precision = 5, scale = 2)
-    private Double confidence;
+    private BigDecimal confidence;
     
     @Column(name = "summary", columnDefinition = "TEXT")
     private String summary;
