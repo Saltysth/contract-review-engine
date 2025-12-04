@@ -40,7 +40,7 @@ public class ContractReviewController {
     /**
      * 创建合同审查任务
      */
-    @PostMapping("/tasks/")
+    @PostMapping("/tasks")
     @Operation(summary = "创建审查任务", description = "创建新的合同审查任务")
     public ResponseEntity<ContractTaskDto> createReviewTask(@Valid @RequestBody ContractReviewCreateRequestDto requestDto) {
 
