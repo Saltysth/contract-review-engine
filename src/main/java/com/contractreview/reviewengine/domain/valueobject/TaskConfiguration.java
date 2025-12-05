@@ -27,6 +27,8 @@ public class TaskConfiguration {
     Integer priority;
     @Schema(description = "并发数")
     Integer concurrency;
+    @Schema(description = "是否为草稿状态")
+    Boolean isDraft;
     @Schema(description = "自定义设置")
     Map<String, Object> customSettings;
     
@@ -34,16 +36,20 @@ public class TaskConfiguration {
                            Integer timeoutSeconds,
                            Integer priority,
                            Integer concurrency,
+                           Boolean isDraft,
                            Map<String, Object> customSettings) {
         this.retryPolicy = retryPolicy != null ? retryPolicy : RetryPolicy.defaultPolicy();
         this.timeoutSeconds = timeoutSeconds != null ? timeoutSeconds : 3600;
         this.priority = priority != null ? priority : 0;
         this.customSettings = customSettings != null ? new HashMap<>(customSettings) : new HashMap<>();
+        this.concurrency = concurrency != null ? concurrency : 0;
+        this.isDraft = isDraft;
     }
 
     public static TaskConfiguration defaultTaskConfiguration() {
         return TaskConfiguration.builder()
                 .retryPolicy(RetryPolicy.defaultPolicy())
+                .isDraft(true)
                 .timeoutSeconds(3600)
                 .priority(0)
                 .customSettings(new HashMap<>())

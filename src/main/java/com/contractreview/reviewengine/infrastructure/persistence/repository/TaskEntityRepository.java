@@ -81,6 +81,8 @@ public interface TaskEntityRepository extends JpaRepository<TaskEntity, Long> {
         SELECT new com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskListItemDto(
             CAST(t.id AS string),
             ct.contractId,
+            ct.fileUuid,
+            t.configuration,
             t.taskName,
             ct.reviewType,
             t.status,
