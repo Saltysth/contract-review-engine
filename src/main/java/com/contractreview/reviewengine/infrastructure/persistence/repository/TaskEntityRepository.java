@@ -48,12 +48,12 @@ public interface TaskEntityRepository extends JpaRepository<TaskEntity, Long> {
      * @return 平均执行时长（分钟）
      */
     @Query(value = """
-        SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (end_time - created_time)) / 60), 0)
-        FROM task
-        WHERE (current_stage = :reviewCompleted OR task_status = ANY(:statusList))
-        AND start_time IS NOT NULL
-        AND created_time IS NOT NULL
-        """, nativeQuery = true)
+    SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (end_time - created_time)) / 60), 0)
+    FROM task
+    WHERE (current_stage = :reviewCompleted OR task_status IN (:statusList))
+    AND start_time IS NOT NULL
+    AND created_time IS NOT NULL
+    """, nativeQuery = true)
     Double calculateAverageDurationInMinutes(
         @Param("reviewCompleted") String reviewCompleted,
         @Param("statusList") List<String> statusList);
