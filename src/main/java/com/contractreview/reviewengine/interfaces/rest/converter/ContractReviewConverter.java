@@ -186,9 +186,9 @@ public class ContractReviewConverter {
             }
         }
 
-        // 检查合同状态
-        if (dto.getContractStatus() != null) {
-            // 这里可能需要在审查配置中添加状态字段
+        // 检查合同状态 不能更改正式配置
+        if (dto.isDraft() && !currentConfig.isDraft()) {
+            return false;
         }
 
         // 检查提示模板

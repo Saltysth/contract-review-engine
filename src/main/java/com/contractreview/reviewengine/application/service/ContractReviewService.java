@@ -245,10 +245,6 @@ public class ContractReviewService {
             log.warn("contractId cannot be null");
             throw new IllegalArgumentException("contractId cannot be null");
         }
-        if (!ContractStatus.DRAFT.equals(requestDto.getContractStatus())) {
-            log.warn("Contract task cannot be updated: {} (status is not draft)", requestDto.getContractId());
-            throw new IllegalArgumentException("Contract task cannot be updated: status is not draft");
-        }
     }
 
     /**

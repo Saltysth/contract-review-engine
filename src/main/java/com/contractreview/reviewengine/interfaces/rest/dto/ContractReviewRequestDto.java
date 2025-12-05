@@ -70,8 +70,11 @@ public class ContractReviewRequestDto {
     @Schema(description = "合同类型")
     private ContractType contractType;
 
+    /**
+     * 上传文件后默认创建的就是draft的合同，只有在完全配置之后才是正式任务
+     */
     @Schema(description = "合同状态")
-    private ContractStatus contractStatus;
+    private boolean isDraft;
 
     @Schema(description = "提示词模版")
     private PromptTemplateType promptTemplate;

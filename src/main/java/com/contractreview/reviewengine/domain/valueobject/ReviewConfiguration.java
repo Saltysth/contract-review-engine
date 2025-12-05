@@ -20,6 +20,8 @@ import java.util.List;
 @AllArgsConstructor
 public class ReviewConfiguration {
 
+    private boolean isDraft;
+
     private ReviewType reviewType;
 
     private List<ReviewTypeDetail> customSelectedReviewTypes;
@@ -46,6 +48,7 @@ public class ReviewConfiguration {
      */
     public static ReviewConfiguration defaultConfiguration() {
         return ReviewConfiguration.builder()
+                .isDraft(true)
                 .reviewType(ReviewType.FULL_REVIEW)
                 .enableTerminology(true)
                 .promptTemplate(PromptTemplateType.STANDARD)

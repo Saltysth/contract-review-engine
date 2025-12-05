@@ -97,13 +97,20 @@ public class ModelReviewExecutor {
             log.info("只执行待处理任务，当前任务：{}, 状态： {}", task.getId(), task.getStatus());
             return;
         }
+
+        ContractReview contractTask = contractReviewService.getContractTask(task.getId());
+
+        if (contractTask.getReviewConfiguration().isDraft()) {
+            log.info("草稿任务暂不执行， 任务ID: {}", task.getId());
+            return;
+        }
+
         // 启动任务
         task.start();
 
         log.debug("开始执行任务 {} 的模型审查", task.getId());
 
         try {
-            ContractReview contractTask = contractReviewService.getContractTask(task.getId());
             String prompt = arrangePrompt(contractTask);
             if (null == prompt) {
                 log.error("没有合适的提示词用于模型审查，进行快速失败");
