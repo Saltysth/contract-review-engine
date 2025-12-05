@@ -1,91 +1,89 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
-import lombok.Builder;
-import lombok.Value;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * 审查进度值对象
  *
  * @author SaltyFish
- * @deprecated 此值对象已被弃用。管道阶段处理方式将被简化的直接处理方式替代。
- * 此值对象跟踪多阶段管道的执行进度，在简化的处理方式中不再需要阶段性进度跟踪。
- * 迁移指南：使用简单的任务状态（PENDING、RUNNING、COMPLETED、FAILED）来跟踪审查进度。
  * @since 1.0.0
- * @see com.contractreview.reviewengine.domain.enums.TaskStatus
  */
-@Value
-@Builder
-@Deprecated(since = "1.0.0", forRemoval = true)
+@Getter
 public class ReviewProgress {
 
-    ExecutionStage currentStage;
-    int progressPercentage;
-    @Builder.Default
-    Map<String, Object> stageResults = new HashMap<>();
-    @Builder.Default
-    LocalDateTime lastUpdated = LocalDateTime.now();
+    /**
+     * 当前阶段
+     */
+    private ExecutionStage currentStage;
 
-    public ReviewProgress(ExecutionStage currentStage, int progressPercentage) {
-        this.currentStage = currentStage;
-        this.progressPercentage = Math.max(0, Math.min(100, progressPercentage));
-        this.stageResults = new HashMap<>();
-        this.lastUpdated = LocalDateTime.now();
-    }
+    /**
+     * 进度百分比（0-100）
+     */
+    private Integer progress;
 
-    public ReviewProgress(ExecutionStage currentStage, int progressPercentage,
-                          Map<String, Object> stageResults, LocalDateTime lastUpdated) {
+    /**
+     * 构造函数
+     * @param currentStage 当前执行阶段
+     */
+    public ReviewProgress(ExecutionStage currentStage) {
         this.currentStage = currentStage;
-        this.progressPercentage = Math.max(0, Math.min(100, progressPercentage));
-        this.stageResults = new HashMap<>(stageResults != null ? stageResults : new HashMap<>());
-        this.lastUpdated = lastUpdated != null ? lastUpdated : LocalDateTime.now();
+        this.progress = calculateProgress();
     }
 
     /**
-     * 更新阶段
+     * 私有构造函数，仅用于内部特殊场景
      */
-    public ReviewProgress updateStage(ExecutionStage newStage, int percentage) {
-        return new ReviewProgress(newStage, percentage, this.stageResults, LocalDateTime.now());
+    private ReviewProgress(ExecutionStage currentStage, Integer progress) {
+        this.currentStage = currentStage;
+        this.progress = progress;
     }
 
     /**
-     * 完成阶段
+     * 根据当前阶段计算进度百分比
+     * 计算方式：当前阶段在所有阶段列表中的位置 / 总阶段数 * 100
      */
-    public ReviewProgress completeStage(ExecutionStage stage, Object result) {
-        Map<String, Object> newStageResults = new HashMap<>(this.stageResults);
-        newStageResults.put(stage.name(), result);
-        return new ReviewProgress(this.currentStage, this.progressPercentage, newStageResults, LocalDateTime.now());
+    private Integer calculateProgress() {
+        ExecutionStage[] allStages = ExecutionStage.values();
+        int totalStages = allStages.length;
+
+        // 找到当前阶段的索引位置
+        int currentIndex = 0;
+        for (int i = 0; i < totalStages; i++) {
+            if (allStages[i] == this.currentStage) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        // 计算进度百分比，当前阶段位置+1表示已完成到这个阶段
+        // 例如：如果是第2个阶段（索引1），则进度为 (1+1)/7*100 = 28.57% -> 28%
+        int progressPercentage = (int) ((double) (currentIndex + 1) / totalStages * 100);
+
+        // 确保进度在0-100范围内
+        return Math.max(0, Math.min(100, progressPercentage));
+    }
+
+    /**
+     * 更新到指定阶段并重新计算进度
+     */
+    public void updateStage(ExecutionStage newStage) {
+        this.currentStage = newStage;
+        this.progress = calculateProgress();
     }
 
     /**
      * 检查是否已完成
      */
     public boolean isCompleted() {
-        return progressPercentage >= 100 && currentStage.isFinalStage();
-    }
-
-    /**
-     * 获取阶段结果
-     */
-    public Object getStageResult(ExecutionStage stage) {
-        return stageResults.get(stage.name());
-    }
-
-    /**
-     * 检查阶段是否已完成
-     */
-    public boolean isStageCompleted(ExecutionStage stage) {
-        return stageResults.containsKey(stage.name());
+        return currentStage.isFinalStage();
     }
 
     /**
      * 创建初始进度
      */
     public static ReviewProgress initial() {
-        return new ReviewProgress(ExecutionStage.CONTRACT_CLASSIFICATION, 0);
+        return new ReviewProgress(ExecutionStage.CONTRACT_CLASSIFICATION);
     }
 }

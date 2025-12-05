@@ -26,14 +26,13 @@ public interface ContractTaskJpaRepository extends JpaRepository<ContractTaskEnt
     Optional<ContractTaskEntity> findByFileUuid(String fileUUID);
 
     /**
-     * 查找指定合同的最新任务
-     */
-    @Query("SELECT ct FROM ContractTaskEntity ct WHERE ct.contractId = :contractId ORDER BY ct.auditInfo.createdTime DESC")
-    List<ContractTaskEntity> findLatestByContractId(@Param("contractId") Long contractId);
-
-    /**
      * 根据任务ID查找合同任务
      */
     Optional<ContractTaskEntity> findByTaskId(Long taskId);
 
+    /**
+     * 查找指定合同的最新任务
+     */
+    @Query("SELECT ct FROM ContractTaskEntity ct WHERE ct.contractId = :contractId ORDER BY ct.auditInfo.createdTime DESC")
+    List<ContractTaskEntity> findLatestByContractId(@Param("contractId") Long contractId);
 }

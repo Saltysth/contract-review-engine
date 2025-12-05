@@ -8,6 +8,8 @@ import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateR
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ContractTaskMapper;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ReviewResultMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -165,5 +167,15 @@ public class ContractReviewController {
         TaskId id = TaskId.of(taskId);
         contractReviewService.retryTask(id);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 获取合同任务列表（带统计信息）
+     */
+    @GetMapping("/tasks")
+    @Operation(summary = "获取任务列表", description = "获取合同审查任务列表，包含统计信息和分页查询")
+    public ResponseEntity<TaskListResponseDto> getTaskList(@Valid TaskListQueryRequestDto queryRequest) {
+        TaskListResponseDto response = contractReviewService.getTaskList(queryRequest);
+        return ResponseEntity.ok(response);
     }
 }

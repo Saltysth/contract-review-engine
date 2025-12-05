@@ -230,4 +230,16 @@ public class TaskController {
                 .toList();
         return ResponseEntity.ok(taskDtos);
     }
+
+    /**
+     * 获取任务状态显示名称列表
+     */
+    @GetMapping("/statuses")
+    @Operation(summary = "获取任务状态列表", description = "获取所有任务状态的显示名称")
+    public ResponseEntity<List<String>> getTaskStatuses() {
+        List<String> displayNames = java.util.Arrays.stream(TaskStatus.values())
+                .map(TaskStatus::getDisplayName)
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(displayNames);
+    }
 }

@@ -4,6 +4,8 @@ import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskListItemDto;
+import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -80,5 +82,16 @@ public interface ContractTaskMapper {
                 .backoffMultiplier(2.0)
                 .exponentialBackoff(true)
                 .build();
+    }
+
+    /**
+     * 创建进度字符串
+     */
+    @Named("createProgressString")
+    default String createProgressString(ReviewProgress progress) {
+        if (progress == null) {
+            return "0%";
+        }
+        return progress.getProgress() + "%";
     }
 }

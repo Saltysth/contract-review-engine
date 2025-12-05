@@ -20,6 +20,8 @@ import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraS
 import com.contractreview.reviewengine.interfaces.rest.converter.ContractReviewConverter;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -277,5 +279,13 @@ public class ContractReviewService {
             log.warn("Task cannot be retried: {} (max retries exceeded)", taskId);
             throw new IllegalStateException("Task cannot be retried: max retries exceeded");
         }
+    }
+
+    /**
+     * 获取任务列表（带统计信息）
+     */
+    @Transactional(readOnly = true)
+    public TaskListResponseDto getTaskList(TaskListQueryRequestDto queryRequest) {
+        return contractTaskInfraService.getTaskListWithStatistics(queryRequest);
     }
 }

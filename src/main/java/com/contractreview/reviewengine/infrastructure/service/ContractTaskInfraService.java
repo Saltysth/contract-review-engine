@@ -5,10 +5,18 @@ import com.contractreview.exception.enums.CommonErrorCode;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
+import com.contractreview.reviewengine.domain.repository.ContractTaskListRepository;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskListStatisticsDto;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -24,6 +32,7 @@ import java.util.Optional;
 public class ContractTaskInfraService {
 
     private final ContractReviewRepository contractReviewRepository;
+    private final ContractTaskListRepository contractTaskListRepository;
 
     /**
      * 根据任务ID查询对应的合同任务
@@ -91,5 +100,52 @@ public class ContractTaskInfraService {
         }
 
         return contractReviewRepository.findByTaskId(taskId).isPresent();
+    }
+
+    /**
+     * 获取任务列表（带统计信息）
+     */
+    @Transactional(readOnly = true)
+    public TaskListResponseDto getTaskListWithStatistics(TaskListQueryRequestDto queryRequest) {
+        log.debug("查询任务列表，参数: {}", queryRequest);
+
+        // 构建统计信息
+        TaskListStatisticsDto statistics = buildStatistics();
+
+        // 构建分页查询
+        Pageable pageable = PageRequest.of(
+            queryRequest.getPageNum() - 1, // Spring Data分页从0开始
+            queryRequest.getPageSize(),
+            Sort.by(Sort.Direction.DESC, "createdTime")
+        );
+
+        // 查询任务列表
+        var taskPage = contractTaskListRepository.findTaskList(queryRequest, pageable);
+
+        return TaskListResponseDto.builder()
+            .statistics(statistics)
+            .tasks(taskPage.getContent())
+            .total(taskPage.getTotalElements())
+            .pageNum(queryRequest.getPageNum())
+            .pageSize(queryRequest.getPageSize())
+            .totalPages(taskPage.getTotalPages())
+            .build();
+    }
+
+    /**
+     * 构建统计信息
+     */
+    private TaskListStatisticsDto buildStatistics() {
+        long totalTasks = contractTaskListRepository.countTotalTasks(new TaskListQueryRequestDto());
+        long completedTasks = contractTaskListRepository.countCompletedTasks();
+        long runningTasks = contractTaskListRepository.countRunningTasks();
+        Integer averageDuration = contractTaskListRepository.calculateAverageDuration();
+
+        return TaskListStatisticsDto.builder()
+            .totalTasks((int) totalTasks)
+            .completedTasks((int) completedTasks)
+            .runningTasks((int) runningTasks)
+            .averageDuration(averageDuration)
+            .build();
     }
 }
