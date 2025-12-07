@@ -4,7 +4,6 @@ import com.contract.common.constant.ContractStatus;
 import com.contract.common.constant.ContractType;
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;

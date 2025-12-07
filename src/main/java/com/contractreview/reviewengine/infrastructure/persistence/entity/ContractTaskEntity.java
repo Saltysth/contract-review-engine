@@ -2,7 +2,7 @@ package com.contractreview.reviewengine.infrastructure.persistence.entity;
 
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
+import com.contract.common.enums.ReviewTypeDetail;
 import com.contractreview.reviewengine.domain.valueobject.AuditInfo;
 import com.contractreview.reviewengine.infrastructure.converter.StringListConverter;
 import jakarta.persistence.Column;

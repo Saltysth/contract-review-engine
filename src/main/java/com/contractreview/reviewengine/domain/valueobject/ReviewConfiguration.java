@@ -2,7 +2,7 @@ package com.contractreview.reviewengine.domain.valueobject;
 
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
+import com.contract.common.enums.ReviewTypeDetail;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

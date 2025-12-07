@@ -2,7 +2,7 @@ package com.contractreview.reviewengine.interfaces.rest.dto;
 
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
-import com.contractreview.reviewengine.domain.enums.ReviewTypeDetail;
+import com.contract.common.enums.ReviewTypeDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
