@@ -29,11 +29,11 @@ public class ContractReviewConverter {
 
         // 构建重试策略
         RetryPolicy retryPolicy = RetryPolicy.builder()
-                .maxRetries(dto.getMaxRetries() != null ? dto.getMaxRetries() : 3)
-                .retryIntervalMs(dto.getRetryIntervalSeconds() != null ?
-                    dto.getRetryIntervalSeconds() * 1000L : 60000L)
-                .retryCount(0)
-                .build();
+            .maxRetries(dto.getMaxRetries() != null ? dto.getMaxRetries() : 3)
+            .retryIntervalMs(dto.getRetryIntervalSeconds() != null ?
+                dto.getRetryIntervalSeconds() * 1000L : 60000L)
+            .retryCount(0)
+            .build();
 
         // 构建自定义设置
         Map<String, Object> customSettings = new HashMap<>();
@@ -41,12 +41,13 @@ public class ContractReviewConverter {
 
         // 构建任务配置
         return TaskConfiguration.builder()
-                .retryPolicy(retryPolicy)
-                .timeoutSeconds(dto.getTimeoutMinutes() != null ?
-                    dto.getTimeoutMinutes() * 60 : 1800)
-                .priority(dto.getPriority() != null ? dto.getPriority() : 5)
-                .customSettings(customSettings)
-                .build();
+            .retryPolicy(retryPolicy)
+            .isDraft(dto.isDraft())
+            .timeoutSeconds(dto.getTimeoutMinutes() != null ?
+                dto.getTimeoutMinutes() * 60 : 1800)
+            .priority(dto.getPriority() != null ? dto.getPriority() : 5)
+            .customSettings(customSettings)
+            .build();
     }
 
     /**
@@ -58,10 +59,10 @@ public class ContractReviewConverter {
         }
 
         return ContractMetadata.builder()
-                .contractId(dto.getContractId())
-                .fileUuid(dto.getFileUuid())
-                .businessTags(dto.getBusinessTags())
-                .build();
+            .contractId(dto.getContractId())
+            .fileUuid(dto.getFileUuid())
+            .businessTags(dto.getBusinessTags())
+            .build();
     }
 
     /**
@@ -79,23 +80,23 @@ public class ContractReviewConverter {
         }
 
         return ReviewConfiguration.builder()
-                .reviewType(dto.getReviewType())
-                .customSelectedReviewTypes(dto.getCustomSelectedReviewTypes())
-                .industry(dto.getIndustry())
-                .currency(dto.getCurrency())
-                .contractType(contractTypeStr)
-                .reviewRules(dto.getReviewRules())
-                .promptTemplate(dto.getPromptTemplate())
-                .enableTerminology(dto.getEnableTerminology() != null ?
-                    dto.getEnableTerminology() : true)
-                .build();
+            .reviewType(dto.getReviewType())
+            .customSelectedReviewTypes(dto.getCustomSelectedReviewTypes())
+            .industry(dto.getIndustry())
+            .currency(dto.getCurrency())
+            .contractType(contractTypeStr)
+            .reviewRules(dto.getReviewRules())
+            .promptTemplate(dto.getPromptTemplate())
+            .enableTerminology(dto.getEnableTerminology() != null ?
+                dto.getEnableTerminology() : true)
+            .build();
     }
 
     /**
      * 检查任务配置是否需要更新
      */
     public boolean needsTaskConfigurationUpdate(ContractReviewRequestDto dto,
-                                              TaskConfiguration currentConfig) {
+        TaskConfiguration currentConfig) {
         if (dto == null || currentConfig == null) {
             return false;
         }
@@ -134,22 +135,19 @@ public class ContractReviewConverter {
             }
         }
 
-        // 检查自定义设置中的合同标题
-        if (dto.getContractTitle() != null) {
-            Object currentTitle = currentConfig.getCustomSetting("contractTitle");
-            if (currentTitle == null || !dto.getContractTitle().equals(currentTitle)) {
-                return true;
-            }
+        // 检查合同状态 不能更改正式配置
+        if (dto.isDraft() && (currentConfig.getIsDraft() != null && !currentConfig.getIsDraft())) {
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     /**
      * 检查合同元数据是否需要更新
      */
     public boolean needsContractMetadataUpdate(ContractReviewRequestDto dto,
-                                             ContractMetadata currentMetadata) {
+        ContractMetadata currentMetadata) {
         if (dto == null || currentMetadata == null) {
             return false;
         }
@@ -167,7 +165,7 @@ public class ContractReviewConverter {
      * 检查审查配置是否需要更新
      */
     public boolean needsReviewConfigurationUpdate(ContractReviewRequestDto dto,
-                                                ReviewConfiguration currentConfig) {
+        ReviewConfiguration currentConfig) {
         if (dto == null || currentConfig == null) {
             return false;
         }
@@ -184,11 +182,6 @@ public class ContractReviewConverter {
             if (!newContractType.equals(currentConfig.getContractType())) {
                 return true;
             }
-        }
-
-        // 检查合同状态 不能更改正式配置
-        if (dto.isDraft() && !currentConfig.isDraft()) {
-            return false;
         }
 
         // 检查提示模板

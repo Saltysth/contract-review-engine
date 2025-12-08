@@ -108,4 +108,6 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
      */
     List<TaskEntity> findByStatusAndCurrentStage(TaskStatus status, ExecutionStage currentStage);
 
+    @Query(value = "SELECT EXISTS (SELECT 1 FROM task WHERE task_name = :taskName AND id <> :id)", nativeQuery = true)
+    boolean existsByTaskNameAndNotThis(@Param("taskName") String taskName, @Param("id") Long id);
 }

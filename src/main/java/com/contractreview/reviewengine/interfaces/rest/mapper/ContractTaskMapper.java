@@ -28,6 +28,9 @@ public interface ContractTaskMapper {
     /**
      * 请求DTO转Domain对象（用于创建）
      */
+    @Mapping(target = "contractMetadata.businessTags", source = "businessTags")
+    @Mapping(target = "reviewConfiguration.industry", source = "industry")
+    @Mapping(target = "reviewConfiguration.currency", source = "currency")
     ContractReview toEntity(ContractReviewRequestDto dto);
     
     /**

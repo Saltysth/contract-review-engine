@@ -13,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 合同任务列表项DTO
@@ -57,6 +58,9 @@ public class ContractTaskListItemDto {
     @Schema(description = "任务配置")
     private TaskConfiguration configuration;
 
+    @Schema(description = "业务标签")
+    private List<String> businessTags;
+
     @Schema(description = "开始时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startTime;
@@ -78,6 +82,7 @@ public class ContractTaskListItemDto {
         Long contractId,
         String fileUuid,
         TaskConfiguration configuration,
+        List<String> businessTags,
         String taskName,
         ReviewType contractType,
         TaskStatus status,
@@ -91,6 +96,7 @@ public class ContractTaskListItemDto {
         this.contractId = contractId;
         this.fileUuid = fileUuid;
         this.configuration = configuration;
+        this.businessTags = businessTags;
         this.taskName = taskName;
         this.contractType = contractType;
         this.status = status;

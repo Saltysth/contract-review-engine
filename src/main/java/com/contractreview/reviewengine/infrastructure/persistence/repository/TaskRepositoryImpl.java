@@ -224,4 +224,11 @@ public class TaskRepositoryImpl implements TaskRepository {
         List<TaskEntity> entities = jpaRepository.findByStatusAndCurrentStage(status, currentStage);
         return converter.toDomainList(entities);
     }
+
+    @Override
+    public boolean existByTaskNameAndNotThis(String taskName, Long id) {
+        return jpaRepository.existsByTaskNameAndNotThis(taskName, id);
+    }
+
+
 }

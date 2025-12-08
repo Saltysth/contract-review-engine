@@ -52,6 +52,8 @@ public class ReviewConfiguration {
                 .reviewType(ReviewType.FULL_REVIEW)
                 .enableTerminology(true)
                 .promptTemplate(PromptTemplateType.STANDARD)
+                .industry("通用行业")
+                .currency("人民币(CNY)")
                 .build();
     }
 

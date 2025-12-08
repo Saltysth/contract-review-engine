@@ -5,6 +5,8 @@ import com.contract.common.constant.ContractType;
 import com.contractreview.reviewengine.domain.enums.PromptTemplateType;
 import com.contractreview.reviewengine.domain.enums.ReviewType;
 import com.contract.common.enums.ReviewTypeDetail;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -34,7 +36,7 @@ public class ContractReviewRequestDto {
 
 
     ///
-    /// task
+    /// task TODO 暂未实现，先存着
     ///
     @Schema(description = "任务优先级", example = "5", minimum = "1", maximum = "10")
     @Builder.Default
@@ -74,21 +76,24 @@ public class ContractReviewRequestDto {
      * 上传文件后默认创建的就是draft的合同，只有在完全配置之后才是正式任务
      */
     @Schema(description = "合同状态")
+    @JsonProperty("isDraft")
     private boolean isDraft;
 
     @Schema(description = "提示词模版")
     private PromptTemplateType promptTemplate;
 
     @Schema(description = "是否启用术语库")
+    // TODO 暂不支持开启，所以暂时不会用配置
     private Boolean enableTerminology;
 
     @Schema(description = "自定义选择审查项")
+    @JsonDeserialize(using = ReviewTypeDetailListDeserializer.class)
     private List<ReviewTypeDetail> customSelectedReviewTypes;
 
-    @Schema(description = "合同审查规则", example = "1,2,3")
+    @Schema(description = "合同审查规则")
     private List<String> reviewRules;
 
-    @Schema(description = "业务标签列表", example = "娱乐、游戏、家庭")
+    @Schema(description = "业务标签列表")
     private List<String> businessTags;
 
     @Schema(description = "行业", example = "煤矿业")

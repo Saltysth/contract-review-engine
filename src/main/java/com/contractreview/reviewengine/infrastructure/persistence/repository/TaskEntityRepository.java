@@ -83,6 +83,7 @@ public interface TaskEntityRepository extends JpaRepository<TaskEntity, Long> {
             ct.contractId,
             ct.fileUuid,
             t.configuration,
+            ct.businessTags,
             t.taskName,
             ct.reviewType,
             t.status,
@@ -103,4 +104,38 @@ public interface TaskEntityRepository extends JpaRepository<TaskEntity, Long> {
         @Param("taskName") String taskName,
         @Param("contractType") com.contractreview.reviewengine.domain.enums.ReviewType contractType,
         @Param("taskStatus") TaskStatus taskStatus);
+
+    /**
+     * 根据任务ID查询合同任务详情
+     */
+    @Query("""
+        SELECT new com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto(
+            CAST(t.id AS string),
+            t.taskName,
+            t.taskType,
+            t.status,
+            t.configuration,
+            t.errorMessage,
+            t.startTime,
+            t.endTime,
+            ct.contractId,
+            ct.fileUuid,
+            ct.businessTags,
+            ct.reviewType,
+            ct.customSelectedReviewTypes,
+            ct.industry,
+            ct.currency,
+            ct.contractType,
+            ct.typeConfidence,
+            ct.promptTemplate,
+            ct.enableTerminology,
+            t.currentStage,
+            t.createdTime
+        )
+        FROM TaskEntity t, ContractTaskEntity ct
+        WHERE ct.taskId = t.id
+        AND t.id = :taskId
+        """)
+    com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto findTaskDetailByTaskId(
+        @Param("taskId") Long taskId);
 }

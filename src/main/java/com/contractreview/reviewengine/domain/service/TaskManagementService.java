@@ -7,6 +7,7 @@ import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -173,8 +174,14 @@ public class TaskManagementService {
     /**
      * 更新任务配置
      */
-    public void updateTaskConfiguration(TaskId taskId, TaskConfiguration configuration) {
+    public void updateTaskConfiguration(TaskId taskId, TaskConfiguration configuration,
+        @NotBlank(message = "合同标题不能为空") String contractTitle) {
         Task task = getTaskById(taskId);
+        if (taskRepository.existByTaskNameAndNotThis(contractTitle, taskId.getValue())) {
+            log.warn("Task with name {} already exists", contractTitle);
+            throw new IllegalStateException("Task with name " + contractTitle + " already exists");
+        }
+        task.setTaskName(contractTitle);
         task.updateConfiguration(configuration);
         taskRepository.save(task);
         log.info("Updated task configuration for task: {}", taskId);

@@ -1,11 +1,9 @@
 package com.contractreview.reviewengine.application.service;
 
-import com.contract.common.constant.ContractStatus;
 import com.contract.common.dto.DeleteClauseExtractionResponse;
 import com.contract.common.feign.ClauseExtractionFeignClient;
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
-import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
@@ -13,19 +11,20 @@ import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.domain.repository.ContractReviewRepository;
 import com.contractreview.reviewengine.domain.repository.ReviewResultRepository;
-import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.service.TaskManagementService;
+import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
 import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
+import com.contractreview.reviewengine.infrastructure.persistence.repository.TaskEntityRepository;
 import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraService;
 import com.contractreview.reviewengine.interfaces.rest.converter.ContractReviewConverter;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +49,8 @@ public class ContractReviewService {
     private final TaskService taskService;
     private final ContractTaskInfraService contractTaskInfraService;
     private final ClauseExtractionFeignClient clauseExtractionFeignClient;
-    
+    private final TaskEntityRepository taskEntityRepository;
+
     /**
      * 创建合同审查任务
      */
@@ -215,7 +215,7 @@ public class ContractReviewService {
         var currentTaskConfig = taskManagementService.getTaskConfiguration(taskId);
         if (contractReviewConverter.needsTaskConfigurationUpdate(requestDto, currentTaskConfig)) {
             TaskConfiguration newTaskConfig = contractReviewConverter.convertToTaskConfiguration(requestDto);
-            taskManagementService.updateTaskConfiguration(taskId, newTaskConfig);
+            taskManagementService.updateTaskConfiguration(taskId, newTaskConfig, requestDto.getContractTitle());
             log.info("Updated task configuration for task: {}", taskId);
         }
 
@@ -283,5 +283,29 @@ public class ContractReviewService {
     @Transactional(readOnly = true)
     public TaskListResponseDto getTaskList(TaskListQueryRequestDto queryRequest) {
         return contractTaskInfraService.getTaskListWithStatistics(queryRequest);
+    }
+
+    public ContractTaskDetailDto getContractTaskDetailByTaskId(TaskId taskId) {
+        log.info("查询合同任务详情，taskId: {}", taskId.getValue());
+
+        // 使用JPQL查询直接获取ContractTaskDetailDto
+        ContractTaskDetailDto taskDetail = taskEntityRepository.findTaskDetailByTaskId(taskId.getValue());
+
+        if (taskDetail == null) {
+            log.warn("未找到合同任务详情，taskId: {}", taskId.getValue());
+            throw new IllegalArgumentException("Contract task not found for taskId: " + taskId.getValue());
+        }
+
+        // 丰富进度信息
+        if (taskDetail.getCurrentStage() != null) {
+            ReviewProgress progress = new ReviewProgress(taskDetail.getCurrentStage());
+            taskDetail.setProgressDetail(progress);
+            taskDetail.setProgressStr(progress.getProgress() + "%");
+        }
+
+        log.info("成功查询到合同任务详情，taskId: {}, contractId: {}",
+            taskId.getValue(), taskDetail.getContractId());
+
+        return taskDetail;
     }
 }

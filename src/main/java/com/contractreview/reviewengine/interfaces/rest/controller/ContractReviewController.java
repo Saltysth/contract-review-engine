@@ -6,6 +6,7 @@ import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
@@ -88,10 +89,9 @@ public class ContractReviewController {
      */
     @GetMapping("/tasks/{taskId}")
     @Operation(summary = "获取任务详情", description = "获取合同审查任务的详细信息")
-    public ResponseEntity<ContractTaskDto> getContractTask(@PathVariable("taskId") Long taskId) {
+    public ResponseEntity<ContractTaskDetailDto> getContractTask(@PathVariable("taskId") Long taskId) {
         TaskId id = TaskId.of(taskId);
-        ContractReview contractReview = contractReviewService.getContractTask(id);
-        return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
+        return ResponseEntity.ok(contractReviewService.getContractTaskDetailByTaskId(id));
     }
 
     /**

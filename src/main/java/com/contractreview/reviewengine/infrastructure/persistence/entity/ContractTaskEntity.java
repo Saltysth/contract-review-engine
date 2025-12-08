@@ -78,6 +78,9 @@ public class ContractTaskEntity {
     @Column(name = "type_confidence", precision = 5, scale = 2)
     private BigDecimal typeConfidence;
 
+    /**
+     * 冗余
+     */
     @Column(name = "review_rules", columnDefinition = "TEXT")
     private String reviewRules;
 
