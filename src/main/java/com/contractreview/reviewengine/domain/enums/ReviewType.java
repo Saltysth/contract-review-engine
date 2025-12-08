@@ -11,8 +11,8 @@ import lombok.Getter;
 public enum ReviewType {
     
     FULL_REVIEW("全量审查", "审查所有选中的条款项目，适用于重要合同"),
-    RISK_ASSESSMENT("部分审查", "仅审查核心风险项目，适合常规合同"),
-    CUSTOM("个性化审查", "自定义选择具体的审查项目");
+    PARTIAL_REVIEW("部分审查", "仅审查核心风险项目，适合常规合同"),
+    CUSTOM_REVIEW("个性化审查", "自定义选择具体的审查项目");
     
     private final String displayName;
     private final String description;
