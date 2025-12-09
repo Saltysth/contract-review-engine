@@ -96,7 +96,7 @@ public class ReviewRuleResultEntity {
      * 风险条款ID
      */
     @Column(name = "risk_clause_id")
-    private Long riskClauseId;
+    private String riskClauseId;
 
     /**
      * 风险原文

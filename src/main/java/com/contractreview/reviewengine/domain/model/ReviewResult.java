@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.domain.model;
 
+import com.contractreview.reviewengine.domain.valueobject.Evidence;
 import com.contractreview.reviewengine.domain.valueobject.KeyPoint;
 import com.contractreview.reviewengine.domain.valueobject.ReviewRuleResult;
 import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
@@ -61,6 +62,13 @@ public class ReviewResult {
     private String stageResult;
 
     /**
+     * 模型版本
+     * 存储用于审查的AI模型版本号
+     */
+    @Column(name = "model_version", length = 50)
+    private String modelVersion;
+
+    /**
      * 审查规则结果列表（拆分为独立的子表）
      */
     @OneToMany(mappedBy = "reviewResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -74,18 +82,13 @@ public class ReviewResult {
     private List<KeyPoint> keyPoints;
 
     /**
-     * 冗余字段用于存储后续可能的拓展信息
+     * 证据列表
+     * 存储审查过程中使用的证据信息
      */
-    @Column(name = "extra_result", columnDefinition = "JSONB")
+    @Column(name = "evidences", columnDefinition = "JSONB")
     @Convert(converter = JsonConverter.class)
-    private Map<String, Object> extraResult;
+    private List<Evidence> evidences;
 
-    /**
-     * 条款结果列表
-     */
-    @OneToMany(mappedBy = "reviewResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ClauseResultEntity> clauseResults;
-    
     @Column(name = "created_time", nullable = false, updatable = false)
     private LocalDateTime createdTime;
     
@@ -95,16 +98,6 @@ public class ReviewResult {
             createdTime = LocalDateTime.now();
         }
     }
-    
-    /**
-     * 创建审查结果
-     */
-    public static ReviewResult create(Long taskId, Long contractId, String reviewType) {
-        return ReviewResult.builder()
-                .taskId(taskId)
-                .contractId(contractId)
-                .reviewType(reviewType)
-                .createdTime(LocalDateTime.now())
-                .build();
-    }
+
+
 }

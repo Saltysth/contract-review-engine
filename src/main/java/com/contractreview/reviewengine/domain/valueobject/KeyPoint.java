@@ -20,11 +20,6 @@ import java.util.List;
 public class KeyPoint {
 
     /**
-     * 关键点ID
-     */
-    private Long id;
-
-    /**
      * 关键点描述
      * 注重于条款的具体问题点
      */
@@ -51,7 +46,7 @@ public class KeyPoint {
     private Long reviewRuleId;
 
     /**
-     * 相关的条款ID
+     * 相关的条款ID列表，逗号分隔
      */
-    private Long clauseId;
+    private String clauseIds;
 }

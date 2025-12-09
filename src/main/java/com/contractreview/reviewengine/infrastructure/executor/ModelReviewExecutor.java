@@ -3,7 +3,6 @@ package com.contractreview.reviewengine.infrastructure.executor;
 import com.alibaba.nacos.shaded.com.google.common.collect.Lists;
 import com.contract.ai.feign.client.AiClient;
 import com.contract.ai.feign.dto.ChatRequest;
-import com.contract.ai.feign.dto.ChatResponse;
 import com.contract.ai.feign.enums.ModelType;
 import com.contract.ai.feign.enums.PlatFormType;
 import com.contract.common.feign.ClauseFeignClient;
@@ -27,6 +26,7 @@ import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.ReviewConfiguration;
 import com.contractreview.reviewengine.domain.valueobject.ReviewRuleResult;
+import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -289,7 +289,7 @@ public class ModelReviewExecutor {
             }
 
             // 反序列化AI响应
-            ReviewResult modelReviewResult = parseAIResponse(task.getId().getValue(), contractId, rawResult);
+            ReviewResult modelReviewResult = parseAIResponse(task, contractTask, rawResult);
 
             log.debug("合同 {} AI审查完成，总体风险等级: {}", contractId, modelReviewResult.getOverallRiskLevel());
             return modelReviewResult;
@@ -306,11 +306,24 @@ public class ModelReviewExecutor {
         }
     }
 
+    private ReviewResult fillModelReviewResult(ReviewResult modelReviewResult, Task task, ContractReview contractTask) {
+        ReviewConfiguration reviewConfiguration = contractTask.getReviewConfiguration();
+        modelReviewResult.setTaskId(task.getId().getValue());
+        modelReviewResult.setContractId(contractTask.getContractId());
+        // 目前写死的
+        modelReviewResult.setModelVersion(ModelType.IFlow_GLM_4_6.getModelCode());
+        modelReviewResult.setReviewType(reviewConfiguration.getReviewType().getDisplayName());
+
+        return modelReviewResult;
+    }
+
     /**
      * 解析AI响应JSON为ReviewResult对象
      */
-    private ReviewResult parseAIResponse(Long taskId, Long contractId, String rawResult) throws JsonProcessingException {
+    private ReviewResult parseAIResponse(Task task, ContractReview contractTask, String rawResult) throws JsonProcessingException {
         try {
+            Long taskId = task.getId().getValue();
+            Long contractId = contractTask.getContractId();
             // 解析JSON响应
             Map<String, Object> responseMap = objectMapper.readValue(rawResult, new TypeReference<Map<String, Object>>() {});
 
@@ -344,17 +357,10 @@ public class ModelReviewExecutor {
                 reviewResult.setSummary(summary);
             }
 
-            // recommendations字段已改用keyPoints，不再直接处理字符串格式的recommendations
-            // 如果需要，可以将其转换为KeyPoint格式并设置到keyPoints字段
-
-            // riskItems字段已拆分为独立的子表，不再直接设置
-            // 可以在这里解析并将数据保存到ruleResults子表
-
-            // complianceIssues字段已删除，相关数据可以保存到extraResult字段
-
             // 设置阶段结果
             reviewResult.setStageResult("模型审查完成");
 
+            fillModelReviewResult(reviewResult, task, contractTask);
             return reviewResult;
 
         } catch (JsonProcessingException e) {
@@ -363,108 +369,26 @@ public class ModelReviewExecutor {
         }
     }
 
-    /**
-     * 解析单个风险项
-     */
-    private ReviewRuleResult parseRiskItem(Map<String, Object> riskItemMap) {
-        try {
-            String factorName = riskItemMap.containsKey("factorName") ?
-                String.valueOf(riskItemMap.get("factorName")) : "未知风险";
-
-            RiskLevel riskLevel = RiskLevel.MEDIUM; // 默认中等风险
-            if (riskItemMap.containsKey("riskLevel")) {
-                String riskLevelStr = String.valueOf(riskItemMap.get("riskLevel"));
-                try {
-                    riskLevel = RiskLevel.valueOf(riskLevelStr.toUpperCase());
-                } catch (IllegalArgumentException e) {
-                    log.warn("无效的风险等级: {}, 使用默认MEDIUM", riskLevelStr);
-                }
-            }
-
-            Double riskScore = 60.0; // 默认分数
-            if (riskItemMap.containsKey("riskScore")) {
-                try {
-                    riskScore = Double.valueOf(String.valueOf(riskItemMap.get("riskScore")));
-                    if (riskScore < 0.0 || riskScore > 100.0) {
-                        log.warn("风险分数超出范围[0,100]: {}, 使用默认60", riskScore);
-                        riskScore = 60.0;
-                    }
-                } catch (NumberFormatException e) {
-                    log.warn("风险分数格式错误: {}, 使用默认60", riskItemMap.get("riskScore"));
-                }
-            }
-
-            Double confidence = 0.8; // 默认置信度
-            if (riskItemMap.containsKey("confidence")) {
-                try {
-                    confidence = Double.valueOf(String.valueOf(riskItemMap.get("confidence")));
-                    if (confidence < 0.0 || confidence > 1.0) {
-                        log.warn("置信度超出范围[0,1]: {}, 使用默认0.8", confidence);
-                        confidence = 0.8;
-                    }
-                } catch (NumberFormatException e) {
-                    log.warn("置信度格式错误: {}, 使用默认0.8", riskItemMap.get("confidence"));
-                }
-            }
-
-            String riskSummary = riskItemMap.containsKey("riskSummary") ?
-                String.valueOf(riskItemMap.get("riskSummary")) : "";
-            if (riskSummary.length() > 100) {
-                riskSummary = riskSummary.substring(0, 100);
-            }
-
-            String recommendation = riskItemMap.containsKey("recommendation") ?
-                String.valueOf(riskItemMap.get("recommendation")) : "";
-            if (recommendation.length() > 500) {
-                recommendation = recommendation.substring(0, 500);
-            }
-
-            Long riskClauseId = null;
-            if (riskItemMap.containsKey("riskClauseId")) {
-                try {
-                    riskClauseId = Long.valueOf(String.valueOf(riskItemMap.get("riskClauseId")));
-                } catch (NumberFormatException e) {
-                    log.debug("风险条款ID格式错误，忽略: {}", riskItemMap.get("riskClauseId"));
-                }
-            }
-
-            String originContractText = riskItemMap.containsKey("originContractText") ?
-                String.valueOf(riskItemMap.get("originContractText")) : null;
-            if (originContractText != null && originContractText.length() > 1000) {
-                originContractText = originContractText.substring(0, 1000);
-            }
-
-            return ReviewRuleResult.builder()
-                .riskName(factorName)
-                .ruleType("MODEL_REVIEW")
-                .riskLevel(riskLevel)
-                .riskScore(riskScore)
-                .summary(riskSummary)
-                .recommendation(Arrays.asList(recommendation))
-                .riskClauseId(riskClauseId)
-                .originContractText(originContractText)
-                .findings(new ArrayList<>())
-                .build();
-
-        } catch (Exception e) {
-            log.warn("解析风险项失败: {}, 跳过此项", e.getMessage());
-            return null;
-        }
-    }
-
 
     /**
      * 保存阶段结果
+     * 保存模型审查阶段的ReviewResult到数据库
      */
     private void saveStageResult(Task task, ContractReview contractTask, ReviewResult reviewResult) {
         try {
             log.debug("保存任务 {} 的模型审查阶段结果", task.getId());
-            // 这里需要根据实际的阶段结果存储逻辑来实现
-            // 可以将结果存储到review_result表中
-            // 暂时只记录日志
+
+            // 调用应用服务层保存审查结果
+            contractReviewService.saveReviewResult(reviewResult);
+
+            log.info("成功保存任务 {} 的模型审查结果，总体风险等级: {}",
+                task.getId(), reviewResult.getOverallRiskLevel());
+
         } catch (Exception e) {
-            log.warn("保存阶段结果失败: {}", e.getMessage());
+            log.error("保存阶段结果失败: {}", e.getMessage(), e);
             // 阶段结果保存失败不应该影响主流程
+            // 但需要记录详细的错误信息以便问题排查
+            throw new RuntimeException("保存审查结果失败: " + e.getMessage(), e);
         }
     }
 

@@ -56,7 +56,7 @@ public class ReviewRuleResult {
      * 风险条款Id
      */
     @Nullable
-    Long riskClauseId;
+    String riskClauseId;
 
     /**
      * 风险原文，尽在风险条款Id为空的情况下存在，即非条款风险

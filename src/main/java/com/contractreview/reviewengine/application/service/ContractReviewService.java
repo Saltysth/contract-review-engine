@@ -136,9 +136,6 @@ public class ContractReviewService {
         ReviewResult savedResult = reviewResultRepository.save(reviewResult);
         log.info("Saved review result for task: {}", reviewResult.getTaskId());
 
-        // 更新任务状态为完成
-        taskManagementService.completeTask(TaskId.of(reviewResult.getTaskId()));
-
         return savedResult;
     }
     
