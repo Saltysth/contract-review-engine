@@ -26,17 +26,18 @@ import com.contractreview.reviewengine.domain.model.ReviewType;
 import com.contractreview.reviewengine.domain.model.Task;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.ReviewConfiguration;
-import com.contractreview.reviewengine.domain.valueobject.RiskItem;
+import com.contractreview.reviewengine.domain.valueobject.ReviewRuleResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 /**
@@ -332,20 +333,7 @@ public class ModelReviewExecutor {
                 }
             }
 
-            if (responseMap.containsKey("confidence")) {
-                try {
-                    Double confidence = Double.valueOf(String.valueOf(responseMap.get("confidence")));
-                    if (confidence >= 0.0 && confidence <= 1.0) {
-                        reviewResult.setConfidence(java.math.BigDecimal.valueOf(confidence));
-                    } else {
-                        log.warn("置信度值超出范围[0,1]: {}, 使用默认值", confidence);
-                        reviewResult.setConfidence(java.math.BigDecimal.valueOf(0.5));
-                    }
-                } catch (NumberFormatException e) {
-                    log.warn("置信度格式错误: {}, 使用默认值", responseMap.get("confidence"));
-                    reviewResult.setConfidence(java.math.BigDecimal.valueOf(0.5));
-                }
-            }
+            // confidence字段已被删除，不再处理
 
             if (responseMap.containsKey("summary")) {
                 String summary = String.valueOf(responseMap.get("summary"));
@@ -356,51 +344,13 @@ public class ModelReviewExecutor {
                 reviewResult.setSummary(summary);
             }
 
-            if (responseMap.containsKey("recommendations")) {
-                String recommendations = String.valueOf(responseMap.get("recommendations"));
-                if (recommendations.length() > 2000) {
-                    log.warn("建议过长，截断至2000字符");
-                    recommendations = recommendations.substring(0, 2000);
-                }
-                reviewResult.setRecommendations(recommendations);
-            }
+            // recommendations字段已改用keyPoints，不再直接处理字符串格式的recommendations
+            // 如果需要，可以将其转换为KeyPoint格式并设置到keyPoints字段
 
-            // 解析风险项列表
-            if (responseMap.containsKey("riskItems")) {
-                try {
-                    List<Map<String, Object>> riskItemsMap = objectMapper.convertValue(
-                        responseMap.get("riskItems"),
-                        new TypeReference<List<Map<String, Object>>>() {}
-                    );
+            // riskItems字段已拆分为独立的子表，不再直接设置
+            // 可以在这里解析并将数据保存到ruleResults子表
 
-                    List<RiskItem> riskItems = new ArrayList<>();
-                    for (Map<String, Object> riskItemMap : riskItemsMap) {
-                        RiskItem riskItem = parseRiskItem(riskItemMap);
-                        if (riskItem != null) {
-                            riskItems.add(riskItem);
-                        }
-                    }
-                    reviewResult.setRiskItems(riskItems);
-
-                } catch (Exception e) {
-                    log.warn("解析风险项失败: {}, 使用空列表", e.getMessage());
-                    reviewResult.setRiskItems(new ArrayList<>());
-                }
-            }
-
-            // 解析合规问题
-            if (responseMap.containsKey("complianceIssues")) {
-                try {
-                    Map<String, Object> complianceIssues = objectMapper.convertValue(
-                        responseMap.get("complianceIssues"),
-                        new TypeReference<Map<String, Object>>() {}
-                    );
-                    reviewResult.setComplianceIssues(complianceIssues);
-                } catch (Exception e) {
-                    log.warn("解析合规问题失败: {}, 使用空Map", e.getMessage());
-                    reviewResult.setComplianceIssues(new java.util.HashMap<>());
-                }
-            }
+            // complianceIssues字段已删除，相关数据可以保存到extraResult字段
 
             // 设置阶段结果
             reviewResult.setStageResult("模型审查完成");
@@ -416,7 +366,7 @@ public class ModelReviewExecutor {
     /**
      * 解析单个风险项
      */
-    private RiskItem parseRiskItem(Map<String, Object> riskItemMap) {
+    private ReviewRuleResult parseRiskItem(Map<String, Object> riskItemMap) {
         try {
             String factorName = riskItemMap.containsKey("factorName") ?
                 String.valueOf(riskItemMap.get("factorName")) : "未知风险";
@@ -484,15 +434,16 @@ public class ModelReviewExecutor {
                 originContractText = originContractText.substring(0, 1000);
             }
 
-            return RiskItem.builder()
-                .factorName(factorName)
+            return ReviewRuleResult.builder()
+                .riskName(factorName)
+                .ruleType("MODEL_REVIEW")
                 .riskLevel(riskLevel)
                 .riskScore(riskScore)
-                .confidence(confidence)
-                .riskSummary(riskSummary)
-                .recommendation(recommendation)
+                .summary(riskSummary)
+                .recommendation(Arrays.asList(recommendation))
                 .riskClauseId(riskClauseId)
                 .originContractText(originContractText)
+                .findings(new ArrayList<>())
                 .build();
 
         } catch (Exception e) {

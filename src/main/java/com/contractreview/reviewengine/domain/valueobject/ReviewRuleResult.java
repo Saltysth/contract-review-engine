@@ -5,16 +5,26 @@ import org.springframework.lang.Nullable;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 /**
- * 风险对象
+ * 审查规则级别的结果
  * 
  * @author SaltyFish
  */
 @Value
 @Builder
-public class RiskItem {
-    
-    String factorName;
+public class ReviewRuleResult {
+
+    /**
+     * 风险名称
+     */
+    String riskName;
+
+    /**
+     * 属于对审查规则类型
+     */
+    String ruleType;
 
     /**
      * 0 无风险
@@ -27,17 +37,20 @@ public class RiskItem {
 
     Double riskScore;
 
-    Double confidence;
-
     /**
      * 十文字以内概要
      */
-    String riskSummary;
+    String summary;
+
+    /**
+     * 条款级别的结果
+     */
+    List<String> findings;
 
     /**
      * 操作建议
      */
-    String recommendation;
+    List<String> recommendation;
 
     /**
      * 风险条款Id
