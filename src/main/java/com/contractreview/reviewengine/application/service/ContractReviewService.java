@@ -2,6 +2,7 @@ package com.contractreview.reviewengine.application.service;
 
 import com.contract.common.dto.DeleteClauseExtractionResponse;
 import com.contract.common.feign.ClauseExtractionFeignClient;
+import com.contract.common.feign.ClauseFeignClient;
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
 import com.contractreview.reviewengine.domain.enums.TaskType;
@@ -22,12 +23,17 @@ import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequest
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskProgressDto;
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
+import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +56,7 @@ public class ContractReviewService {
     private final ContractTaskInfraService contractTaskInfraService;
     private final ClauseExtractionFeignClient clauseExtractionFeignClient;
     private final TaskEntityRepository taskEntityRepository;
+    private final ClauseFeignClient clauseFeignClient;
 
     /**
      * 创建合同审查任务
@@ -307,5 +314,221 @@ public class ContractReviewService {
             taskId.getValue(), taskDetail.getContractId());
 
         return taskDetail;
+    }
+
+    /**
+     * 获取任务实时进度
+     */
+    @Transactional(readOnly = true)
+    public TaskProgressDto getTaskProgress(TaskId taskId) {
+        log.info("获取任务进度，taskId: {}", taskId.getValue());
+
+        // 获取任务信息
+        Task task = taskService.getTaskById(taskId);
+        if (task == null) {
+            throw new IllegalArgumentException("Task not found: " + taskId.getValue());
+        }
+
+        // 获取合同审查信息以获取合同ID
+        ContractReview contractReview = contractTaskInfraService.findContractTaskByTaskId(taskId);
+        if (contractReview == null) {
+            throw new IllegalArgumentException("Contract review not found for task: " + taskId.getValue());
+        }
+
+        // 获取合同条款数量 - 暂时使用模拟数据，实际应该调用clauseExtractionFeignClient获取
+        int totalClauses = clauseFeignClient.getClausesByContractId(contractReview.getContractId()).size();
+
+        // 计算进度
+        TaskProgressDto.TaskStatisticsDto statistics = calculateTaskStatistics(task, totalClauses);
+
+        // 计算进度百分比
+        double progress = calculateProgress(task, statistics);
+
+        // 计算预计剩余时间
+        String estimatedTimeRemaining = calculateEstimatedTimeRemaining(task, statistics, totalClauses);
+
+        // 计算平均每个条款耗时
+        Long averageItemDuration = calculateAverageItemDuration(task, statistics);
+
+        return TaskProgressDto.builder()
+                .taskId(taskId.getValue().toString())
+                .currentStage(mapCurrentStage(task.getCurrentStage()))
+                .progress(progress)
+                .statistics(statistics)
+                .estimatedTimeRemaining(estimatedTimeRemaining)
+                .startTime(task.getStartTime())
+                .averageItemDuration(averageItemDuration)
+                .build();
+    }
+
+    /**
+     * 计算任务统计信息
+     */
+    private TaskProgressDto.TaskStatisticsDto calculateTaskStatistics(Task task, int totalClauses) {
+        TaskStatus status = task.getStatus();
+
+        // 由于粒度是合同级别而不支持条款级别，所以根据合同任务的状态统一设置
+        if (status == TaskStatus.COMPLETED) {
+            return TaskProgressDto.TaskStatisticsDto.builder()
+                    .total(totalClauses)
+                    .completed(totalClauses)
+                    .running(0)
+                    .failed(0)
+                    .skipped(0) // TODO: 实现跳过功能
+                    .build();
+        } else if (status == TaskStatus.FAILED) {
+            return TaskProgressDto.TaskStatisticsDto.builder()
+                    .total(totalClauses)
+                    .completed(0)
+                    .running(0)
+                    .failed(totalClauses)
+                    .skipped(0)
+                    .build();
+        } else if (status == TaskStatus.RUNNING) {
+            // 根据当前阶段计算进度
+            ExecutionStage currentStage = task.getCurrentStage();
+            ExecutionStage[] stages = ExecutionStage.values();
+            int currentStageIndex = currentStage.ordinal();
+            int totalStages = stages.length - 1; // 不包括REVIEW_COMPLETED
+
+            // 计算已完成的阶段数
+            int completedStages = currentStageIndex;
+            // 计算当前阶段的进度
+            double stageProgress = getStageProgress(currentStage, task);
+
+            int completedClauses = (int) ((completedStages + stageProgress) * totalClauses / totalStages);
+            int runningClauses = totalClauses - completedClauses;
+
+            return TaskProgressDto.TaskStatisticsDto.builder()
+                    .total(totalClauses)
+                    .completed(completedClauses)
+                    .running(runningClauses)
+                    .failed(0)
+                    .skipped(0)
+                    .build();
+        } else {
+            // PENDING 或 CANCELLED
+            return TaskProgressDto.TaskStatisticsDto.builder()
+                    .total(totalClauses)
+                    .completed(0)
+                    .running(0)
+                    .failed(0)
+                    .skipped(0)
+                    .build();
+        }
+    }
+
+    /**
+     * 获取当前阶段的进度（简化实现）
+     */
+    private double getStageProgress(ExecutionStage stage, Task task) {
+        // 简化实现，实际应该根据具体业务逻辑计算
+        if (task.getStatus() == TaskStatus.RUNNING) {
+            // 假设每个阶段进度为50%（正在执行中）
+            return 0.5;
+        }
+        return 0.0;
+    }
+
+    /**
+     * 计算总体进度百分比
+     */
+    private double calculateProgress(Task task, TaskProgressDto.TaskStatisticsDto statistics) {
+        if (statistics.getTotal() == 0) {
+            return 0.0;
+        }
+
+        TaskStatus status = task.getStatus();
+        if (status == TaskStatus.COMPLETED) {
+            return 100.0;
+        } else if (status == TaskStatus.FAILED) {
+            return 0.0;
+        } else {
+            // 基于已完成的条款数量计算进度
+            return (double) statistics.getCompleted() / statistics.getTotal() * 100;
+        }
+    }
+
+    /**
+     * 计算预计剩余时间
+     */
+    private String calculateEstimatedTimeRemaining(Task task, TaskProgressDto.TaskStatisticsDto statistics, int totalClauses) {
+        TaskStatus status = task.getStatus();
+
+        if (status == TaskStatus.COMPLETED || status == TaskStatus.CANCELLED) {
+            return "0分钟";
+        }
+
+        if (status == TaskStatus.PENDING) {
+            return "未开始";
+        }
+
+        // 计算时间系数
+        double timeCoefficient = calculateTimeCoefficient(task);
+
+        // 计算剩余条款数量
+        int remainingClauses = statistics.getRunning() + statistics.getFailed() + statistics.getSkipped();
+
+        // 计算预计时间（每个条款10秒基准）
+        double estimatedSeconds = remainingClauses * 10 * timeCoefficient;
+
+        // 如果任务已开始，减去已执行时间
+        if (task.getStartTime() != null && status == TaskStatus.RUNNING) {
+            long elapsedSeconds = Duration.between(task.getStartTime(), java.time.LocalDateTime.now()).getSeconds();
+            double remainingSeconds = Math.max(0, estimatedSeconds - elapsedSeconds);
+            estimatedSeconds = remainingSeconds;
+        }
+
+        // 转换为分钟
+        int minutes = (int) Math.ceil(estimatedSeconds / 60);
+        return minutes + "分钟";
+    }
+
+    /**
+     * 计算时间系数
+     */
+    private double calculateTimeCoefficient(Task task) {
+        if (task.getConfiguration() == null) {
+            return 1.0; // 默认系数
+        }
+
+        // 根据审查类型和提示词类型计算系数
+        // TODO: 根据实际的配置字段实现
+        return 1.0;
+    }
+
+    /**
+     * 计算平均每个条款耗时
+     */
+    private Long calculateAverageItemDuration(Task task, TaskProgressDto.TaskStatisticsDto statistics) {
+        if (task.getStartTime() == null || task.getCompletedAt() == null) {
+            return null; // 任务未完成，无法计算平均耗时
+        }
+
+        if (statistics.getCompleted() == 0) {
+            return null;
+        }
+
+        long totalDurationMillis = Duration.between(task.getStartTime(), task.getCompletedAt()).toMillis();
+        return totalDurationMillis / statistics.getCompleted();
+    }
+
+    /**
+     * 映射当前阶段到显示名称
+     */
+    private String mapCurrentStage(ExecutionStage stage) {
+        if (stage == null) {
+            return "未开始";
+        }
+
+        return switch (stage) {
+            case CONTRACT_CLASSIFICATION -> "合同分类";
+            case CLAUSE_EXTRACTION -> "条款抽取";
+            case KNOWLEDGE_MATCHING -> "知识库匹配";
+            case MODEL_REVIEW -> "模型审查";
+            case RESULT_VALIDATION -> "结果校验";
+            case REPORT_GENERATION -> "报告生成";
+            case REVIEW_COMPLETED -> "审查完毕";
+        };
     }
 }

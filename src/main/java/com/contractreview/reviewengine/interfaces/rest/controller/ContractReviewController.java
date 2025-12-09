@@ -11,6 +11,7 @@ import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.TaskProgressDto;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ContractTaskMapper;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ReviewResultMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -177,5 +178,16 @@ public class ContractReviewController {
     public ResponseEntity<TaskListResponseDto> getTaskList(@Valid TaskListQueryRequestDto queryRequest) {
         TaskListResponseDto response = contractReviewService.getTaskList(queryRequest);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 获取任务实时进度
+     */
+    @GetMapping("/tasks/{taskId}/progress")
+    @Operation(summary = "获取任务进度", description = "获取任务的实时进度和预计剩余时间")
+    public ResponseEntity<TaskProgressDto> getTaskProgress(@PathVariable("taskId") Long taskId) {
+        TaskId id = TaskId.of(taskId);
+        TaskProgressDto progress = contractReviewService.getTaskProgress(id);
+        return ResponseEntity.ok(progress);
     }
 }
