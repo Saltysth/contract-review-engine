@@ -5,6 +5,8 @@ import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -64,12 +66,13 @@ public class ReviewRuleResultEntity {
      * [90-100] 严重风险
      */
     @Column(name = "risk_level", nullable = false)
+    @Enumerated(EnumType.STRING)
     private RiskLevel riskLevel;
 
     /**
      * 风险评分
      */
-    @Column(name = "risk_score")
+    @Column(name = "risk_score", columnDefinition = "NUMERIC")
     private Double riskScore;
 
     /**

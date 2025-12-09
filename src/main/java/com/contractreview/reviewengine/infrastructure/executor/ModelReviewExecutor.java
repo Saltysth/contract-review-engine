@@ -200,38 +200,39 @@ public class ModelReviewExecutor {
         PromptFeignDTO systemPrompt = prompts.get(0);
         String promptContent = systemPrompt.getPromptContent();
 
-        StringBuilder dynamicPrompt = new StringBuilder();
-        dynamicPrompt.append("\n\n=== 合同条款信息 ===\n");
+        StringBuilder rulePrompt = new StringBuilder();
+        StringBuilder clausePrompt = new StringBuilder();
 
         // 按条款类型组织条款信息
         for (Map.Entry<String, List<ClauseFeignDTO>> entry : clausesByType.entrySet()) {
             String clauseType = entry.getKey();
             List<ClauseFeignDTO> typeClauses = entry.getValue();
 
-            dynamicPrompt.append(String.format("\n【%s条款】(%d条):\n", clauseType, typeClauses.size()));
+            rulePrompt.append(String.format("\n【%s条款】(%d条):\n", clauseType, typeClauses.size()));
             for (ClauseFeignDTO clause : typeClauses) {
-                dynamicPrompt.append(String.format("- %s: %s\n",
+                rulePrompt.append(String.format("-id: %s\n%s: %s\n",
+                    clause.getId(),
                     clause.getClauseTitle() != null ? clause.getClauseTitle() : "无标题",
                     clause.getClauseContent() != null ? clause.getClauseContent() : "无内容"));
             }
         }
-
-        dynamicPrompt.append("\n=== 审查规则 ===\n");
 
         // 按条款类型组织规则信息
         for (Map.Entry<String, List<ReviewRuleFeignDTO>> entry : rulesByType.entrySet()) {
             String ruleClauseType = entry.getKey();
             List<ReviewRuleFeignDTO> typeRules = entry.getValue();
 
-            dynamicPrompt.append(String.format("\n【%s规则】(%d条):\n", ruleClauseType, typeRules.size()));
+            clausePrompt.append(String.format("\n【%s规则】(%d条):\n", ruleClauseType, typeRules.size()));
             for (ReviewRuleFeignDTO rule : typeRules) {
-                dynamicPrompt.append(String.format("- %s: %s\n",
+                clausePrompt.append(String.format("-id: %s\n%s: %s\n",
+                    rule.getId(),
                     rule.getRuleName() != null ? rule.getRuleName() : "无名称",
                     rule.getRuleContent() != null ? rule.getRuleContent() : "无描述"));
             }
         }
 
-        promptContent = promptContent.replace("</ruleAndclause>", dynamicPrompt.toString());
+        promptContent = promptContent.replace("</rules>", rulePrompt.toString());
+        promptContent = promptContent.replace("</clauses>", clausePrompt.toString());
 
         return promptContent;
     }

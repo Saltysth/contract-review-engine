@@ -47,8 +47,8 @@ public interface ReviewResultMapper {
     @Mapping(target = "keyPoints", source = "recommendations", qualifiedByName = "stringToKeyPoints")
     @Mapping(target = "stageResult", ignore = true)
     @Mapping(target = "ruleResults", ignore = true)
-    @Mapping(target = "clauseResults", ignore = true)
-    @Mapping(target = "extraResult", ignore = true)
+    @Mapping(target = "modelVersion", ignore = true)
+    @Mapping(target = "evidences", ignore = true)
     @Mapping(target = "createdTime", ignore = true)
     ReviewResult toEntity(ReviewResultDto dto);
     
