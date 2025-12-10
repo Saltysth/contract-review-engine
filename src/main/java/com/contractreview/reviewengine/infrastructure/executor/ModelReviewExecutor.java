@@ -17,6 +17,7 @@ import com.contract.common.feign.dto.ReviewRuleFeignDTO;
 import com.contract.common.feign.dto.ReviewRulePageResultFeignDTO;
 import com.contract.common.feign.dto.ReviewRuleQueryFeignDTO;
 import com.contractreview.reviewengine.application.service.ContractReviewService;
+import com.contractreview.reviewengine.application.service.TaskService;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
@@ -59,6 +60,7 @@ public class ModelReviewExecutor {
     private final PromptFeignClient promptFeignClient;
     private final AiClient aiClient;
     private final ObjectMapper objectMapper;
+    private final TaskService taskService;
 
     /**
      * 批量处理模型审查任务
@@ -109,6 +111,7 @@ public class ModelReviewExecutor {
 
         // 启动任务
         task.start();
+        taskRepository.save(task);
 
         log.debug("开始执行任务 {} 的模型审查", task.getId());
 
@@ -130,7 +133,6 @@ public class ModelReviewExecutor {
 
             // 更新到下一阶段
             task.updateCurrentStage(ExecutionStage.REPORT_GENERATION);
-            task.complete(); // 当前阶段完成（程序执行成功）
 
             log.info("任务 {} 模型审查阶段完成，已推进到报告生成阶段", task.getId());
 

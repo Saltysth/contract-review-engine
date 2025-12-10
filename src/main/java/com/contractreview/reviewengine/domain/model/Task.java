@@ -130,6 +130,14 @@ public class Task {
         updateAuditInfo();
     }
 
+    public void finish() {
+        if (this.currentStage != ExecutionStage.REVIEW_COMPLETED) {
+            throw new IllegalStateException("Current stage cannot be set finished");
+        }
+        this.status = TaskStatus.COMPLETED;
+        updateAuditInfo();
+    }
+
     /**
      * 任务失败
      */

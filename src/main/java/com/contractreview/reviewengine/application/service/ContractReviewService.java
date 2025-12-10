@@ -133,6 +133,13 @@ public class ContractReviewService {
      * 保存审查结果
      */
     public ReviewResult saveReviewResult(ReviewResult reviewResult) {
+        // 建立双向关联关系：设置每个规则结果的父引用
+        if (reviewResult.getRuleResults() != null) {
+            reviewResult.getRuleResults().forEach(ruleResult -> 
+                ruleResult.setReviewResult(reviewResult)
+            );
+        }
+        
         ReviewResult savedResult = reviewResultRepository.save(reviewResult);
         log.info("Saved review result for task: {}", reviewResult.getTaskId());
 

@@ -65,21 +65,10 @@ public class ReportGenerationExecutor {
         log.debug("开始执行任务 {} 的报告生成", task.getId());
 
         try {
-            // 获取AI审查结果
-            Object reviewResult = getStageResult(task, ExecutionStage.MODEL_REVIEW);
-            if (reviewResult == null) {
-                throw new IllegalStateException("无法获取模型审查结果，无法生成报告");
-            }
-
-            // 生成最终报告（基于之前的审查结果，无论风险等级如何）
-            Map<String, Object> finalReport = generateFinalReport(task, reviewResult);
-
-            // 保存最终结果
-            saveFinalResult(task, finalReport);
 
             // 完成整个审查流程
             task.updateCurrentStage(ExecutionStage.REVIEW_COMPLETED);
-            task.complete(); // 整个任务完成（程序执行成功）
+            task.finish(); // 整个任务完成（程序执行成功）
             taskRepository.save(task);
 
             log.info("任务 {} 报告生成阶段完成，整个审查流程已结束", task.getId());

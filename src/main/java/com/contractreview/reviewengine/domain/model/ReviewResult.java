@@ -2,13 +2,9 @@ package com.contractreview.reviewengine.domain.model;
 
 import com.contractreview.reviewengine.domain.valueobject.Evidence;
 import com.contractreview.reviewengine.domain.valueobject.KeyPoint;
-import com.contractreview.reviewengine.domain.valueobject.ReviewRuleResult;
-import com.contractreview.reviewengine.infrastructure.converter.EvidenceListJsonConverter;
-import com.contractreview.reviewengine.infrastructure.converter.KeyPointListJsonConverter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -21,11 +17,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 审查结果实体
@@ -80,16 +76,16 @@ public class ReviewResult {
     /**
      * 关键点列表（包含关键点和修复建议）
      */
-    @Column(name = "key_points", columnDefinition = "JSONB")
-    @Convert(converter = KeyPointListJsonConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "key_points")
     private List<KeyPoint> keyPoints;
 
     /**
      * 证据列表
      * 存储审查过程中使用的证据信息
      */
-    @Column(name = "evidences", columnDefinition = "JSONB")
-    @Convert(converter = EvidenceListJsonConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "evidences")
     private List<Evidence> evidences;
 
     @Column(name = "created_time", nullable = false, updatable = false)

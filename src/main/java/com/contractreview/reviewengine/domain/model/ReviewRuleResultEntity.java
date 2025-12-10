@@ -1,10 +1,8 @@
 package com.contractreview.reviewengine.domain.model;
 
 import com.contractreview.reviewengine.domain.enums.RiskLevel;
-import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -18,6 +16,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.List;
 
@@ -86,15 +86,15 @@ public class ReviewRuleResultEntity {
     /**
      * 条款级别的结果（JSON格式存储）
      */
-    @Column(name = "findings", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "findings")
     private List<String> findings;
 
     /**
      * 操作建议（JSON格式存储）
      */
-    @Column(name = "recommendation", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "recommendation")
     private List<String> recommendation;
 
     /**
