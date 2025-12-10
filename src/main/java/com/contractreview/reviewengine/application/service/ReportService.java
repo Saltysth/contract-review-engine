@@ -6,9 +6,6 @@ import com.contractreview.reviewengine.domain.service.ReviewResultService;
 import com.contractreview.reviewengine.interfaces.rest.dto.ReportDetailDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.report.*;
 import com.contractreview.reviewengine.domain.valueobject.Evidence;
-import com.contractreview.reviewengine.domain.valueobject.KeyPoint;
-import com.contractreview.reviewengine.domain.model.ReviewRuleResultEntity;
-import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.domain.exception.BusinessException;
 import com.contract.common.feign.ClauseFeignClient;
 import com.contract.common.feign.dto.ClauseFeignDTO;
@@ -16,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -154,14 +149,14 @@ public class ReportService {
                 .kind("overview")
                 .riskLevel(reviewResult.getOverallRiskLevel())
                 .summary(reviewResult.getSummary())
-                .findings(Arrays.asList(
-                        FindingDto.builder()
-                                .id("finding-" + reviewResult.getId())
-                                .type("info")
-                                .description("合同结构完整，包含必要的基础条款")
-                                .severity("low")
-                                .evidence(Arrays.asList("structure-analysis", "completeness-check"))
-                                .build()
+                .findings(Collections.singletonList(
+                    FindingDto.builder()
+                        .id("finding-" + reviewResult.getId())
+                        .type("info")
+                        .description("合同结构完整，包含必要的基础条款")
+                        .severity("low")
+                        .evidence(Arrays.asList("structure-analysis", "completeness-check"))
+                        .build()
                 ))
                 .recommendations(Arrays.asList(
                         "建议重点关注高风险条款的修改",
@@ -170,23 +165,46 @@ public class ReportService {
                 .build();
         ruleResults.add(overview);
 
+        // 获取条款列表用于填充clauseText
+        Map<String, String> clauseContentMap = new HashMap<>();
+        try {
+            List<ClauseFeignDTO> clauses = clauseFeignClient.getClausesByContractId(reviewResult.getContractId());
+            if (clauses != null) {
+                clauseContentMap = clauses.stream()
+                        .collect(Collectors.toMap(
+                                clause -> String.valueOf(clause.getId()),
+                                ClauseFeignDTO::getClauseContent,
+                                (existing, replacement) -> existing
+                        ));
+            }
+        } catch (Exception e) {
+            log.warn("获取合同{}的条款内容失败: {}", reviewResult.getContractId(), e.getMessage());
+        }
+
         // 添加规则结果
         if (reviewResult.getRuleResults() != null) {
+            Map<String, String> finalClauseContentMap = clauseContentMap;
             reviewResult.getRuleResults().forEach(rule -> {
                 List<FindingDto> findings = new ArrayList<>();
                 if (rule.getFindings() != null) {
                     for (int i = 0; i < rule.getFindings().size(); i++) {
+                        // 获取clauseText：优先从Feign获取，其次使用originContractText
+                        String clauseText = null;
+                        if (rule.getRiskClauseId() != null) {
+                            clauseText = finalClauseContentMap.get(rule.getRiskClauseId());
+                        }
+                        if (clauseText == null) {
+                            clauseText = rule.getOriginContractText();
+                        }
+
                         findings.add(FindingDto.builder()
                                 .id("finding-" + rule.getId() + "-" + i)
                                 .type("risk")
                                 .description(rule.getFindings().get(i))
                                 .severity(rule.getRiskLevel().name().toLowerCase())
-                                .evidence(Arrays.asList("rule-" + rule.getId()))
-                                .location(rule.getRiskClauseId() != null ?
-                                        LocationDto.builder()
-                                                .clause(rule.getRiskClauseId())
-                                                .build() : null)
-                                .clauseText(rule.getOriginContractText())
+                                .evidence(List.of("rule-" + rule.getId()))
+                                .location(null) // 暂不设置location字段
+                                .clauseText(clauseText)
                                 .build());
                     }
                 }
