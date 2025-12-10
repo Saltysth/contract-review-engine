@@ -24,6 +24,9 @@ public class StatisticsDto {
     @Schema(description = "已审查条款数")
     private Integer reviewed;
 
+    @Schema(description = "无问题数量 - 对应RiskLevel.NO_RISK")
+    private Integer critical;
+
     @Schema(description = "高风险数量 - 对应RiskLevel.HIGH")
     private Integer high;
 

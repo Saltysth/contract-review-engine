@@ -127,6 +127,7 @@ public class ReportService {
         return StatisticsDto.builder()
                 .totalClauses(totalClauses)
                 .reviewed(totalClauses) // 目前粒度粗，这里同上
+                .critical(riskCount.get("CRITICAL").intValue())
                 .high(riskCount.get("HIGH").intValue())      // 对应RiskLevel.HIGH
                 .medium(riskCount.get("MEDIUM").intValue())  // 对应RiskLevel.MEDIUM
                 .low(riskCount.get("LOW").intValue())        // 对应RiskLevel.LOW
