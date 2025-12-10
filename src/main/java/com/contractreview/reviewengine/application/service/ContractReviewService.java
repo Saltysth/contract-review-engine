@@ -535,4 +535,34 @@ public class ContractReviewService {
             case REVIEW_COMPLETED -> "审查完毕";
         };
     }
+
+    /**
+     * 根据任务ID获取合同标题
+     *
+     * @param taskId 任务ID
+     * @return 合同标题
+     */
+    @Transactional(readOnly = true)
+    public String getContractTitleByTaskId(TaskId taskId) {
+        log.debug("根据任务ID获取合同标题，taskId: {}", taskId.getValue());
+
+        // 获取合同审查信息
+        ContractReview contractReview = contractTaskInfraService.findContractTaskByTaskId(taskId);
+        if (contractReview == null) {
+            throw new IllegalArgumentException("Contract review not found for task: " + taskId.getValue());
+        }
+
+        // 调用合同管理服务获取合同信息
+        try {
+            ContractFeignDTO contract = contractFeignClient.getContractById(contractReview.getContractId());
+            if (contract != null) {
+                return contract.getContractName();
+            }
+        } catch (Exception e) {
+            log.warn("获取合同信息失败，contractId: {}, error: {}", contractReview.getContractId(), e.getMessage());
+        }
+
+        // 如果获取失败，返回默认标题
+        return "合同-" + contractReview.getContractId();
+    }
 }

@@ -171,19 +171,6 @@ public class TaskController {
     }
 
     /**
-     * 获取超时任务
-     */
-    @GetMapping("/timeout")
-    @Operation(summary = "获取超时任务", description = "获取运行超时的任务列表")
-    public ResponseEntity<List<TaskDto>> getTimeoutTasks() {
-        List<Task> timeoutTasks = taskService.findTimeoutTasks();
-        List<TaskDto> taskDtos = timeoutTasks.stream()
-                .map(TaskMapper.INSTANCE::toDto)
-                .toList();
-        return ResponseEntity.ok(taskDtos);
-    }
-
-    /**
      * 获取可重试任务
      */
     @GetMapping("/retryable")
@@ -208,16 +195,6 @@ public class TaskController {
                 .map(TaskMapper.INSTANCE::toDto)
                 .toList();
         return ResponseEntity.ok(taskDtos);
-    }
-
-    /**
-     * 检查和处理超时任务
-     */
-    @PostMapping("/timeout/check")
-    @Operation(summary = "检查超时任务", description = "检查并处理所有超时任务")
-    public ResponseEntity<Void> checkAndHandleTimeoutTasks() {
-        taskService.checkAndHandleTimeoutTasks();
-        return ResponseEntity.ok().build();
     }
 
     /**

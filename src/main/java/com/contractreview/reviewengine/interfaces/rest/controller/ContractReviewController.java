@@ -1,6 +1,8 @@
 package com.contractreview.reviewengine.interfaces.rest.controller;
 
 import com.contractreview.reviewengine.application.service.ContractReviewService;
+import com.contractreview.reviewengine.application.service.ReportService;
+import com.contractreview.reviewengine.domain.exception.BusinessException;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
@@ -12,6 +14,8 @@ import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskProgressDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.ReportDetailDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.ApiResponse;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ContractTaskMapper;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ReviewResultMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,6 +44,7 @@ import java.util.Optional;
 @Tag(name = "Contract Review", description = "合同审查API")
 public class ContractReviewController {
     private final ContractReviewService contractReviewService;
+    private final ReportService reportService;
     
     /**
      * 创建合同审查任务
@@ -109,22 +114,7 @@ public class ContractReviewController {
         return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(contractReview));
     }
     
-    /**
-     * 获取审查结果
-     */
-    @GetMapping("/tasks/{taskId}/result")
-    @Operation(summary = "获取审查结果", description = "获取合同审查的结果")
-    public ResponseEntity<ReviewResultDto> getReviewResult(@PathVariable("taskId") Long taskId) {
-        TaskId id = TaskId.of(taskId);
-        Optional<ReviewResult> result = contractReviewService.getReviewResult(id);
-        
-        if (result.isPresent()) {
-            return ResponseEntity.ok(ReviewResultMapper.INSTANCE.toDto(result.get()));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
+
     /**
      * 根据合同ID获取任务列表
      */
@@ -141,24 +131,6 @@ public class ContractReviewController {
         return ResponseEntity.ok(taskDtos);
     }
     
-    /**
-     * 获取合同的最新任务
-     */
-    @GetMapping("/contracts/{contractId}/latest-task")
-    @Operation(summary = "获取最新任务", description = "获取指定合同的最新审查任务")
-    public ResponseEntity<ContractTaskDto> getLatestTaskByContractId(
-            @PathVariable("contractId") Long contractId) {
-
-        Optional<ContractReview> latestReview = contractReviewService.getLatestTaskByContractId(contractId);
-
-        if (latestReview.isPresent()) {
-            return ResponseEntity.ok(ContractTaskMapper.INSTANCE.toDto(latestReview.get()));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-
     /**
      * 重试任务
      */
@@ -189,5 +161,29 @@ public class ContractReviewController {
         TaskId id = TaskId.of(taskId);
         TaskProgressDto progress = contractReviewService.getTaskProgress(id);
         return ResponseEntity.ok(progress);
+    }
+
+    /**
+     * 获取报告详情
+     * 根据任务ID获取完整的审查报告信息
+     */
+    @GetMapping("/reports/{taskId}")
+    @Operation(summary = "获取报告详情", description = "根据任务ID获取完整的审查报告信息")
+    public ResponseEntity<ApiResponse<ReportDetailDto>> getReportDetail(@PathVariable("taskId") Long taskId) {
+        TaskId id = TaskId.of(taskId);
+
+        try {
+            ReportDetailDto reportDetail = reportService.getReportDetail(id);
+            return ResponseEntity.ok(ApiResponse.success(reportDetail));
+        } catch (BusinessException e) {
+            if ("DATA001".equals(e.getErrorCode())) {
+                return ResponseEntity.status(404)
+                        .body(ApiResponse.error(40401, "报告不存在"));
+            }
+            throw e;
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(40001, "无效的任务ID"));
+        }
     }
 }
