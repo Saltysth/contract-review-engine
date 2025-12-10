@@ -235,4 +235,12 @@ public class TaskService {
     public List<Task> getTasksByStatusAndType(TaskStatus status, TaskType taskType) {
         return taskRepository.findByStatusAndTaskType(status, taskType);
     }
+
+    /**
+     * 检查任务名称是否存在
+     */
+    @Transactional(readOnly = true)
+    public boolean existsByTaskName(String taskName) {
+        return taskRepository.existsByTaskName(taskName);
+    }
 }

@@ -115,4 +115,9 @@ public interface TaskRepository {
     List<Task> findByStatusAndCurrentStage(TaskStatus status, ExecutionStage stage);
 
     boolean existByTaskNameAndNotThis(String taskName, Long id);
+
+    /**
+     * 检查任务名称是否存在
+     */
+  boolean existsByTaskName(String taskName);
 }

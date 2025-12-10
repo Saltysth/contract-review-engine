@@ -1,5 +1,6 @@
 package com.contractreview.reviewengine.interfaces.rest.controller;
 
+import com.contractreview.reviewengine.application.service.ContractReviewService;
 import com.contractreview.reviewengine.application.service.TaskService;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
@@ -37,6 +38,7 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final ContractReviewService contractReviewService;
 
     /**
      * 获取任务详情
@@ -151,7 +153,7 @@ public class TaskController {
      */
     @DeleteMapping("/{taskId}")
     @Operation(summary = "删除任务", description = "删除指定的任务")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long taskId) {
+    public ResponseEntity<Void> deleteTask(@PathVariable("taskId") Long taskId) {
         TaskId id = TaskId.of(taskId);
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();
@@ -241,5 +243,17 @@ public class TaskController {
                 .map(TaskStatus::getDisplayName)
                 .collect(java.util.stream.Collectors.toList());
         return ResponseEntity.ok(displayNames);
+    }
+
+    /**
+     * 检查任务名称是否存在
+     */
+    @GetMapping("/check-name")
+    @Operation(summary = "检查任务名称", description = "检查指定的任务名称是否已存在")
+    public ResponseEntity<Boolean> checkTaskNameExists(
+            @Parameter(description = "任务名称", required = true)
+            @RequestParam("taskName") String taskName) {
+        boolean exists = taskService.existsByTaskName(taskName);
+        return ResponseEntity.ok(exists);
     }
 }

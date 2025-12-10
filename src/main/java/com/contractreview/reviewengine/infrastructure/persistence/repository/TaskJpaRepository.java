@@ -110,4 +110,9 @@ public interface TaskJpaRepository extends JpaRepository<TaskEntity, Long> {
 
     @Query(value = "SELECT EXISTS (SELECT 1 FROM task WHERE task_name = :taskName AND id <> :id)", nativeQuery = true)
     boolean existsByTaskNameAndNotThis(@Param("taskName") String taskName, @Param("id") Long id);
+
+    /**
+     * 检查任务名称是否存在
+     */
+    boolean existsByTaskName(String taskName);
 }

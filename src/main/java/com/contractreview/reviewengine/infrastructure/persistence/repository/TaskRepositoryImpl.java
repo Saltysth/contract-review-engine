@@ -230,5 +230,9 @@ public class TaskRepositoryImpl implements TaskRepository {
         return jpaRepository.existsByTaskNameAndNotThis(taskName, id);
     }
 
+    @Override
+    public boolean existsByTaskName(String taskName) {
+        return jpaRepository.existsByTaskName(taskName);
+    }
 
 }
