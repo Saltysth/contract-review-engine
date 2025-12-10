@@ -3,7 +3,9 @@ package com.contractreview.reviewengine.domain.model;
 import com.contractreview.reviewengine.domain.valueobject.Evidence;
 import com.contractreview.reviewengine.domain.valueobject.KeyPoint;
 import com.contractreview.reviewengine.domain.valueobject.ReviewRuleResult;
-import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
+import com.contractreview.reviewengine.infrastructure.converter.EvidenceListJsonConverter;
+import com.contractreview.reviewengine.infrastructure.converter.KeyPointListJsonConverter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -28,7 +30,7 @@ import java.util.Map;
 /**
  * 审查结果实体
  * 对应数据库表 review_result
- * 
+ *
  * @author SaltyFish
  */
 @Entity
@@ -37,6 +39,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewResult {
     
     @Id
@@ -78,7 +81,7 @@ public class ReviewResult {
      * 关键点列表（包含关键点和修复建议）
      */
     @Column(name = "key_points", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
+    @Convert(converter = KeyPointListJsonConverter.class)
     private List<KeyPoint> keyPoints;
 
     /**
@@ -86,7 +89,7 @@ public class ReviewResult {
      * 存储审查过程中使用的证据信息
      */
     @Column(name = "evidences", columnDefinition = "JSONB")
-    @Convert(converter = JsonConverter.class)
+    @Convert(converter = EvidenceListJsonConverter.class)
     private List<Evidence> evidences;
 
     @Column(name = "created_time", nullable = false, updatable = false)

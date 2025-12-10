@@ -2,6 +2,7 @@ package com.contractreview.reviewengine.domain.model;
 
 import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.infrastructure.converter.JsonConverter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -32,6 +33,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ReviewRuleResultEntity {
 
     @Id

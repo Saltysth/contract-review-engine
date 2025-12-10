@@ -5,6 +5,7 @@ import com.contract.ai.feign.client.AiClient;
 import com.contract.ai.feign.dto.ChatRequest;
 import com.contract.ai.feign.enums.ModelType;
 import com.contract.ai.feign.enums.PlatFormType;
+import com.contract.common.enums.ReviewTypeDetail;
 import com.contract.common.feign.ClauseFeignClient;
 import com.contract.common.feign.PromptFeignClient;
 import com.contract.common.feign.ReviewRuleFeignClient;
@@ -21,12 +22,12 @@ import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
-import com.contractreview.reviewengine.domain.model.ReviewType;
+import com.contractreview.reviewengine.domain.model.ReviewRuleResultEntity;
 import com.contractreview.reviewengine.domain.model.Task;
+import com.contractreview.reviewengine.domain.valueobject.Evidence;
+import com.contractreview.reviewengine.domain.valueobject.KeyPoint;
 import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.ReviewConfiguration;
-import com.contractreview.reviewengine.domain.valueobject.ReviewRuleResult;
-import com.contractreview.reviewengine.domain.valueobject.TaskConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -101,7 +102,7 @@ public class ModelReviewExecutor {
 
         ContractReview contractTask = contractReviewService.getContractTask(task.getId());
 
-        if (contractTask.getReviewConfiguration().isDraft()) {
+        if (task.getConfiguration().getIsDraft()) {
             log.info("草稿任务暂不执行， 任务ID: {}", task.getId());
             return;
         }
@@ -208,9 +209,9 @@ public class ModelReviewExecutor {
             String clauseType = entry.getKey();
             List<ClauseFeignDTO> typeClauses = entry.getValue();
 
-            rulePrompt.append(String.format("\n【%s条款】(%d条):\n", clauseType, typeClauses.size()));
+            clausePrompt.append(String.format("\n【%s条款】(%d条):\n", clauseType, typeClauses.size()));
             for (ClauseFeignDTO clause : typeClauses) {
-                rulePrompt.append(String.format("-id: %s\n%s: %s\n",
+                clausePrompt.append(String.format("-id: %s\n%s: %s\n",
                     clause.getId(),
                     clause.getClauseTitle() != null ? clause.getClauseTitle() : "无标题",
                     clause.getClauseContent() != null ? clause.getClauseContent() : "无内容"));
@@ -222,9 +223,9 @@ public class ModelReviewExecutor {
             String ruleClauseType = entry.getKey();
             List<ReviewRuleFeignDTO> typeRules = entry.getValue();
 
-            clausePrompt.append(String.format("\n【%s规则】(%d条):\n", ruleClauseType, typeRules.size()));
+            rulePrompt.append(String.format("\n【%s规则】(%d条):\n", typeRules.get(0).getRuleTypeDescription(), typeRules.size()));
             for (ReviewRuleFeignDTO rule : typeRules) {
-                clausePrompt.append(String.format("-id: %s\n%s: %s\n",
+                rulePrompt.append(String.format("-id: %s\n%s: %s\n",
                     rule.getId(),
                     rule.getRuleName() != null ? rule.getRuleName() : "无名称",
                     rule.getRuleContent() != null ? rule.getRuleContent() : "无描述"));
@@ -233,8 +234,63 @@ public class ModelReviewExecutor {
 
         promptContent = promptContent.replace("</rules>", rulePrompt.toString());
         promptContent = promptContent.replace("</clauses>", clausePrompt.toString());
+        promptContent = promptContent.replace("</industry>", contractTask.getReviewConfiguration().getIndustry());
+        promptContent = promptContent.replace("</currency>", contractTask.getReviewConfiguration().getCurrency());
+        promptContent = promptContent.replace("</RiskLevel>", Arrays.toString(RiskLevel.values()));
+        promptContent = promptContent.replace("</ReviewTypeDetail>", Arrays.toString(ReviewTypeDetail.values()));
+        promptContent = promptContent.replace("</EvidenceType>", Arrays.toString(Evidence.EvidenceType.values()));
 
         return promptContent;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Arrays.toString(RiskLevel.values()));
+
+        // 测试JSON反序列化
+        String testJson = "{ \"overallRiskLevel\": \"HIGH\", \"summary\": \"合同整体风险高，存在多项违法及显失公平条款\", \"ruleResults\": [ { \"riskName\": \"逾期付款违约金条款无效风险\", \"ruleType\": \"PAYMENT_TERM\", \"riskLevel\": \"HIGH\", \"riskScore\": 95.00, \"summary\": \"逾期付款无违约金，条款形同虚设\", \"findings\": [ \"约定逾期超过0日支付违约金\", \"约定违约金标准为万分之0\", \"条款无实际约束力\" ], \"recommendation\": [ \"建议修改为：'乙方未按约支付租金的，逾期超过3日后，应每日向甲方支付所欠租金总额的万分之五（0.05%）作为违约金。'\", \"依据审查规则第1条支付风险评估\" ], \"riskClauseId\": \"7\", \"originContractText\": \"\" }, { \"riskName\": \"违法断电条款风险\", \"ruleType\": \"LIQUIDATED_DAMAGES\", \"riskLevel\": \"HIGH\", \"riskScore\": 99.00, \"summary\": \"甲方无权擅自切断乙方电源\", \"findings\": [ \"条款约定甲方可对欠费乙方切断电源\", \"该条款侵犯了乙方基本居住权利\", \"该行为违反了相关法律规定\" ], \"recommendation\": [ \"建议完全删除'乙方存在应交未交账单的，甲方有权切断房屋电源'的内容\", \"修改为：'乙方逾期支付租金及其他费用的，甲方有权依据合同约定追究其违约责任。'\" ], \"riskClauseId\": \"27\", \"originContractText\": \"\" }, { \"riskName\": \"拆迁补偿权放弃条款无效风险\", \"ruleType\": \"LIQUIDATED_DAMAGES\", \"riskLevel\": \"HIGH\", \"riskScore\": 90.00, \"summary\": \"乙方放弃法定拆迁补偿的条款无效\", \"findings\": [ \"约定乙方放弃所有拆迁补偿费用\", \"包括货币补偿、临时安置补助等\", \"该条款排除了乙方主要法定权利\" ], \"recommendation\": [ \"建议删除'乙方承诺放弃承租人所享有的货币补偿金、临时安置补助费等所有费用'的内容\", \"或增加约定'因拆迁导致合同终止的，甲方应给予乙方相当于一个月租金的搬迁补偿'\" ], \"riskClauseId\": \"19\", \"originContractText\": \"\" }, { \"riskName\": \"争议解决方式约定不明风险\", \"ruleType\": \"DISPUTE_RESOLUTION\", \"riskLevel\": \"MEDIUM\", \"riskScore\": 70.00, \"summary\": \"争议解决方式未明确选择其一\", \"findings\": [ \"同时约定'向法院起诉'和'申请仲裁'\", \"'或'字选择导致条款无效\", \"争议发生时可能因管辖权问题产生额外纠纷\" ], \"recommendation\": [ \"建议明确选择一种争议解决方式，例如修改为：'依法向房屋所在地有管辖权的人民法院起诉'\", \"或修改为：'提交上海仲裁委员会，按照该会届时有效的仲裁规则进行仲裁'\" ], \"riskClauseId\": \"26\", \"originContractText\": \"\" } ], \"keyPoints\": [ { \"point\": \"条款7约定逾期付款违约金为'万分之0'，实际无任何惩罚效力，无法保障甲方收款权利。\", \"type\": \"违约金无效\", \"remediationSuggestions\": [ \"建议修改为：'乙方未按约支付租金的，逾期超过3日后，应每日向甲方支付所欠租金总额的万分之五（0.05%）作为违约金。'\" ], \"riskLevel\": \"HIGH\", \"reviewRuleId\": 1, \"clauseIds\": \"7\" }, { \"point\": \"条款27赋予甲方在乙方欠费时擅自断电的权利，该条款因违反法律强制性规定而自始无效。\", \"type\": \"违法条款\", \"remediationSuggestions\": [ \"建议完全删除'乙方存在应交未交账单的，甲方有权切断房屋电源'的内容，通过合法途径追缴欠费。\" ], \"riskLevel\": \"HIGH\", \"reviewRuleId\": 11, \"clauseIds\": \"27\" }, { \"point\": \"条款19约定乙方放弃法定拆迁补偿，该格式条款排除了对方主要权利，应属无效。\", \"type\": \"权利限制\", \"remediationSuggestions\": [ \"建议删除'乙方承诺放弃承租人所享有的货币补偿金...'的内容，或明确约定甲方对乙方的具体搬迁补偿标准。\" ], \"riskLevel\": \"HIGH\", \"reviewRuleId\": 2, \"clauseIds\": \"19\" }, { \"point\": \"条款26对诉讼和仲裁约定'或'选择，根据法律规定，此种争议解决协议无效。\", \"type\": \"争议解决\", \"remediationSuggestions\": [ \"建议仅保留一种争议解决方式，例如：'向房屋所在地人民法院起诉'，确保条款的有效性。\" ], \"riskLevel\": \"MEDIUM\", \"reviewRuleId\": 10, \"clauseIds\": \"26\" } ], \"evidences\": [ { \"title\": \"付款条款风险评估\", \"type\": \"rule\", \"content\": \"依据《民法典》第585条，违约金应以补偿性为主，惩罚性为辅。条款7约定的违约金为0，无法起到督促履约和弥补损失的作用，应予修正。\", \"references\": [ \"片段: 条款7\" ] }, { \"title\": \"违法条款审查\", \"type\": \"rule\", \"content\": \"依据《民法典》第654条及《电力供应与使用条例》相关规定，供电行为须经法定程序，房东作为非供电主体，无权擅自对用户中断供电。条款27相关内容违反法律强制性规定，无效。\", \"references\": [ \"片段: 条款27\" ] }, { \"title\": \"拆迁补偿权审查\", \"type\": \"rule\", \"content\": \"依据《国有土地上房屋征收与补偿条例》第17条，因征收房屋造成搬迁的，房屋征收部门应当向被征收人支付搬迁费。承租人作为实际使用人，享有获得搬迁、临时安置补偿的法定权利。条款19约定乙方放弃该权利，属无效格式条款。\", \"references\": [ \"片段: 条款19\" ] }, { \"title\": \"争议解决条款审查\", \"type\": \"rule\", \"content\": \"依据《最高人民法院关于适用<中华人民共和国仲裁法>若干问题的解释》第7条，当事人约定争议可以向仲裁机构申请仲裁也可以向人民法院起诉的，仲裁协议无效。条款26的约定属此无效情形。\", \"references\": [ \"片段: 条款26\" ] } ]}";
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            ReviewResult result = mapper.readValue(testJson, ReviewResult.class);
+            System.out.println("反序列化成功！");
+            System.out.println("OverallRiskLevel: " + result.getOverallRiskLevel());
+            System.out.println("Summary: " + result.getSummary());
+            System.out.println("RuleResults count: " + (result.getRuleResults() != null ? result.getRuleResults().size() : 0));
+            System.out.println("KeyPoints count: " + (result.getKeyPoints() != null ? result.getKeyPoints().size() : 0));
+            System.out.println("Evidences count: " + (result.getEvidences() != null ? result.getEvidences().size() : 0));
+
+            // 打印第一个规则结果
+            if (result.getRuleResults() != null && !result.getRuleResults().isEmpty()) {
+                ReviewRuleResultEntity firstRule = result.getRuleResults().get(0);
+                System.out.println("\n第一个规则结果:");
+                System.out.println("  RiskName: " + firstRule.getRiskName());
+                System.out.println("  RuleType: " + firstRule.getRuleType());
+                System.out.println("  RiskLevel: " + firstRule.getRiskLevel());
+                System.out.println("  RiskScore: " + firstRule.getRiskScore());
+            }
+
+            // 打印第一个关键点
+            if (result.getKeyPoints() != null && !result.getKeyPoints().isEmpty()) {
+                KeyPoint firstKeyPoint = result.getKeyPoints().get(0);
+                System.out.println("\n第一个关键点:");
+                System.out.println("  Point: " + firstKeyPoint.getPoint());
+                System.out.println("  Type: " + firstKeyPoint.getType());
+                System.out.println("  ClauseIds: " + firstKeyPoint.getClauseIds());
+            }
+
+            // 打印第一个证据
+            if (result.getEvidences() != null && !result.getEvidences().isEmpty()) {
+                Evidence firstEvidence = result.getEvidences().get(0);
+                System.out.println("\n第一个证据:");
+                System.out.println("  Title: " + firstEvidence.getTitle());
+                System.out.println("  Type: " + firstEvidence.getType());
+                System.out.println("  Content: " + firstEvidence.getContent());
+            }
+
+        } catch (Exception e) {
+            System.err.println("反序列化失败: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private static ReviewRuleQueryFeignDTO getReviewRuleQueryFeignDTO(ContractReview contractTask) {
@@ -273,7 +329,7 @@ public class ModelReviewExecutor {
             var response = aiClient.chat(ChatRequest.builder()
                 .platform(PlatFormType.IFLOW)
                 .model(ModelType.IFlow_GLM_4_6.getModelCode())
-                .maxTokens(40960)
+                .maxTokens(102400)
                 .responseReformat(ChatRequest.ResponseReformat.builder().type("json").build())
                 .messages(messages)
                 .build());
@@ -288,6 +344,7 @@ public class ModelReviewExecutor {
             if (rawResult == null || rawResult.trim().isEmpty()) {
                 throw new RuntimeException("模型审查: AI模型返回的内容为空");
             }
+            log.debug("rawResult is {}", rawResult);
 
             // 反序列化AI响应
             ReviewResult modelReviewResult = parseAIResponse(task, contractTask, rawResult);
@@ -314,6 +371,7 @@ public class ModelReviewExecutor {
         // 目前写死的
         modelReviewResult.setModelVersion(ModelType.IFlow_GLM_4_6.getModelCode());
         modelReviewResult.setReviewType(reviewConfiguration.getReviewType().getDisplayName());
+        modelReviewResult.setStageResult("模型审查完成");
 
         return modelReviewResult;
     }
@@ -323,44 +381,11 @@ public class ModelReviewExecutor {
      */
     private ReviewResult parseAIResponse(Task task, ContractReview contractTask, String rawResult) throws JsonProcessingException {
         try {
-            Long taskId = task.getId().getValue();
-            Long contractId = contractTask.getContractId();
-            // 解析JSON响应
-            Map<String, Object> responseMap = objectMapper.readValue(rawResult, new TypeReference<Map<String, Object>>() {});
+            // 直接反序列化到ReviewResult对象
+            // 使用@JsonIgnoreProperties(ignoreUnknown = true)忽略AI返回但ReviewResult中不存在的字段
+            ReviewResult reviewResult = objectMapper.readValue(rawResult, ReviewResult.class);
 
-            // 创建基础ReviewResult对象
-            ReviewResult reviewResult = ReviewResult.builder()
-                .taskId(taskId)
-                .contractId(contractId)
-                .reviewType(ReviewType.MODEL_REVIEW.getDisplayName())
-                .build();
-
-            // 解析各个字段
-            if (responseMap.containsKey("overallRiskLevel")) {
-                String riskLevelStr = String.valueOf(responseMap.get("overallRiskLevel"));
-                try {
-                    RiskLevel.valueOf(riskLevelStr.toUpperCase());
-                    reviewResult.setOverallRiskLevel(riskLevelStr);
-                } catch (IllegalArgumentException e) {
-                    log.warn("无效的风险等级值: {}, 使用默认值", riskLevelStr);
-                    reviewResult.setOverallRiskLevel("MEDIUM");
-                }
-            }
-
-            // confidence字段已被删除，不再处理
-
-            if (responseMap.containsKey("summary")) {
-                String summary = String.valueOf(responseMap.get("summary"));
-                if (summary.length() > 2000) {
-                    log.warn("摘要过长，截断至2000字符");
-                    summary = summary.substring(0, 2000);
-                }
-                reviewResult.setSummary(summary);
-            }
-
-            // 设置阶段结果
-            reviewResult.setStageResult("模型审查完成");
-
+            // 填充任务相关信息
             fillModelReviewResult(reviewResult, task, contractTask);
             return reviewResult;
 
