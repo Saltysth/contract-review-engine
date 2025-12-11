@@ -131,7 +131,7 @@ public class ReportService {
                 .high(riskCount.get("HIGH").intValue())      // 对应RiskLevel.HIGH
                 .medium(riskCount.get("MEDIUM").intValue())  // 对应RiskLevel.MEDIUM
                 .low(riskCount.get("LOW").intValue())        // 对应RiskLevel.LOW
-                .noIssue(riskCount.get("NO_RISK").intValue() + riskCount.get("CRITICAL").intValue()) // NO_RISK和CRITICAL都计入noIssue
+                .noIssue(riskCount.get("NO_RISK").intValue()) // NO_RISK
                 .keyFindings(keyFindings)
                 .recommendations(recommendations.stream().distinct().collect(Collectors.toList()))
                 .build();
@@ -142,29 +142,6 @@ public class ReportService {
      */
     private List<RuleResultDto> assembleRuleResults(ReviewResult reviewResult) {
         List<RuleResultDto> ruleResults = new ArrayList<>();
-
-        // 添加概览规则结果
-        RuleResultDto overview = RuleResultDto.builder()
-                .id("overview")
-                .title("审查概览")
-                .kind("overview")
-                .riskLevel(reviewResult.getOverallRiskLevel())
-                .summary(reviewResult.getSummary())
-                .findings(Collections.singletonList(
-                    FindingDto.builder()
-                        .id("finding-" + reviewResult.getId())
-                        .type("info")
-                        .description("合同结构完整，包含必要的基础条款")
-                        .severity("low")
-                        .evidence(Arrays.asList("structure-analysis", "completeness-check"))
-                        .build()
-                ))
-                .recommendations(Arrays.asList(
-                        "建议重点关注高风险条款的修改",
-                        "考虑增加风险防控条款"
-                ))
-                .build();
-        ruleResults.add(overview);
 
         // 获取条款列表用于填充clauseText
         Map<String, String> clauseContentMap = new HashMap<>();
