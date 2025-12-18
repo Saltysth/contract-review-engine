@@ -114,7 +114,7 @@ public class ContractTaskInfraService {
 
         // 构建分页查询
         Pageable pageable = PageRequest.of(
-            queryRequest.getPageNum() - 1, // Spring Data分页从0开始
+            queryRequest.getPageNum(),
             queryRequest.getPageSize(),
             Sort.by(Sort.Direction.DESC, "createdTime")
         );
