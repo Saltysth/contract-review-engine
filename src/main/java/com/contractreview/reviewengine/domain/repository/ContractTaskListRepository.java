@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * 合同任务列表查询Repository接口
@@ -53,4 +54,18 @@ public interface ContractTaskListRepository {
      * @return 平均执行时长
      */
     Integer calculateAverageDuration();
+
+    /**
+     * 统计风险分布
+     *
+     * @return 按风险等级聚合的任务数量分布
+     */
+    Map<String, Integer> getRiskDistribution();
+
+    /**
+     * 计算风险趋势（百分比）
+     *
+     * @return 本月相对上月有风险任务的变化百分比（正数为增长，负数为下降）
+     */
+    Integer calculateRiskTrend();
 }

@@ -9,6 +9,7 @@ import com.contractreview.reviewengine.domain.repository.ContractTaskListReposit
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListStatisticsDto;
+import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.HashMap;
 
 /**
  * 合同任务基础设施服务
@@ -141,11 +144,28 @@ public class ContractTaskInfraService {
         long runningTasks = contractTaskListRepository.countRunningTasks();
         Integer averageDuration = contractTaskListRepository.calculateAverageDuration();
 
+        // 获取风险分布
+        Map<String, Integer> riskDistributionStr = contractTaskListRepository.getRiskDistribution();
+        Map<RiskLevel, Integer> riskDistribution = new HashMap<>();
+        riskDistributionStr.forEach((key, value) -> {
+            try {
+                RiskLevel level = RiskLevel.valueOf(key);
+                riskDistribution.put(level, value);
+            } catch (IllegalArgumentException e) {
+                log.warn("未知的风险等级: {}", key);
+            }
+        });
+
+        // 获取风险趋势
+        Integer riskTrend = contractTaskListRepository.calculateRiskTrend();
+
         return TaskListStatisticsDto.builder()
             .totalTasks((int) totalTasks)
             .completedTasks((int) completedTasks)
             .runningTasks((int) runningTasks)
             .averageDuration(averageDuration)
+            .riskDistribution(riskDistribution)
+            .riskTrend(riskTrend)
             .build();
     }
 }

@@ -84,4 +84,12 @@ public interface ReviewResultJpaRepository extends JpaRepository<ReviewResult, L
      */
     @Query("SELECT rr FROM ReviewResult rr WHERE rr.stageResult LIKE %:keyword%")
     List<ReviewResult> findByStageResultContaining(@Param("keyword") String keyword);
+
+    /**
+     * 查找上月有风险的任务数量
+     */
+    @Query("SELECT COUNT(rr) FROM ReviewResult rr WHERE rr.createdTime BETWEEN :startTime AND :endTime AND rr.overallRiskLevel IN :riskLevels")
+    Long countRiskTasksInPeriod(@Param("startTime") LocalDateTime startTime,
+                               @Param("endTime") LocalDateTime endTime,
+                               @Param("riskLevels") List<String> riskLevels);
 }
