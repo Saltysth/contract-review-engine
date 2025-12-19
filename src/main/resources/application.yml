@@ -16,6 +16,16 @@ spring:
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:SaltyLin}
         group: CONTRACT_REVIEW
+        enabled: true
+        heart-beat:
+          enabled: true
+          interval: 5000
+          timeout: 15000
+        metadata:
+          management:
+            context-path: /actuator
+          health:
+            check-url: http://${spring.cloud.client.ip-address}:${server.port}/actuator/health
 
     openfeign:
       client:
@@ -109,13 +119,18 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+      base-path: /actuator
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
+      show-components: always
   prometheus:
     metrics:
       export:
         enabled: true
+  health:
+    defaults:
+      enabled: true
 
 # 日志配置（使用logback-spring.xml）
 logging:
@@ -160,3 +175,5 @@ app:
       webhook:
         enabled: true
         url: ${WEBHOOK_URL:}
+
+# 管理端点配置
