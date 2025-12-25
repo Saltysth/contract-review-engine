@@ -29,7 +29,7 @@ public class ApiResponse<T> {
 
     public static <T> ApiResponse<T> success(T data) {
         return ApiResponse.<T>builder()
-                .code(0)
+                .code(200)
                 .message("success")
                 .data(data)
                 .build();
