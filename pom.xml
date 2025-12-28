@@ -182,6 +182,12 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-feign</artifactId>
+            <version>3.9.1</version>
+        </dependency>
     </dependencies>
     
     <build>

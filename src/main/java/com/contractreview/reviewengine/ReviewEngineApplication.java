@@ -16,11 +16,17 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  *
  * @author SaltyFish
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class,
+    org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration.class
+})
 @EnableAsync
 @EnableCaching
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.contract.common.feign")
+@EnableFeignClients(
+    basePackages = {"com.contract.common.feign", "com.ruoyi.feign.service"},
+    defaultConfiguration = com.contract.common.config.FeignConfig.class
+)
 @EnableJpaRepositories(basePackages = "com.contractreview.reviewengine.infrastructure.persistence.repository")
 @EntityScan(basePackages = "com.contractreview.reviewengine.infrastructure.persistence.entity")
 @ComponentScan(basePackages = {"com.contractreview.reviewengine", "com.contractreview.fileapi"})

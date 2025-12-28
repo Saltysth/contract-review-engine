@@ -1,23 +1,23 @@
 package com.contractreview.reviewengine.interfaces.rest.controller;
 
+import com.contract.common.feign.ContractFeignClient;
 import com.contractreview.reviewengine.application.service.ContractReviewService;
 import com.contractreview.reviewengine.application.service.ReportService;
 import com.contractreview.reviewengine.domain.exception.BusinessException;
 import com.contractreview.reviewengine.domain.model.ContractReview;
-import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.TaskId;
+import com.contractreview.reviewengine.interfaces.rest.dto.ApiResponse;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewCreateRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractReviewRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDto;
-import com.contractreview.reviewengine.interfaces.rest.dto.ReviewResultDto;
+import com.contractreview.reviewengine.interfaces.rest.dto.ReportDetailDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskProgressDto;
-import com.contractreview.reviewengine.interfaces.rest.dto.ReportDetailDto;
-import com.contractreview.reviewengine.interfaces.rest.dto.ApiResponse;
 import com.contractreview.reviewengine.interfaces.rest.mapper.ContractTaskMapper;
-import com.contractreview.reviewengine.interfaces.rest.mapper.ReviewResultMapper;
+import com.ruoyi.common.annotation.Anonymous;
+import com.ruoyi.feign.annotation.RemotePreAuthorize;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 合同审查REST控制器
@@ -45,10 +44,11 @@ import java.util.Optional;
 public class ContractReviewController {
     private final ContractReviewService contractReviewService;
     private final ReportService reportService;
-    
+    private final ContractFeignClient  contractFeignClient;
     /**
      * 创建合同审查任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping("/tasks")
     @Operation(summary = "创建审查任务", description = "创建新的合同审查任务")
     public ResponseEntity<ContractTaskDto> createReviewTask(@Valid @RequestBody ContractReviewCreateRequestDto requestDto) {
@@ -61,6 +61,7 @@ public class ContractReviewController {
     /**
      * 更新合同审查任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PutMapping("/tasks/{contractTaskId}")
     @Operation(summary = "更新审查任务", description = "更新合同审查任务的信息")
     public ResponseEntity<ContractTaskDto> updateReviewTask(@Valid @RequestBody ContractReviewRequestDto requestDto) {
@@ -73,6 +74,7 @@ public class ContractReviewController {
     /**
      * 删除合同审查任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @DeleteMapping("/tasks/{contractTaskId}")
     @Operation(summary = "删除审查任务", description = "删除指定的合同审查任务")
     public ResponseEntity<Boolean> deleteReviewTask(@PathVariable("contractTaskId") Long contractTaskId) {
@@ -82,6 +84,7 @@ public class ContractReviewController {
     /**
      * 启动合同审查
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping("/tasks/{taskId}/start")
     @Operation(summary = "启动审查", description = "启动指定的合同审查任务")
     public ResponseEntity<Void> startReview(@PathVariable("taskId") Long taskId) {
@@ -93,6 +96,7 @@ public class ContractReviewController {
     /**
      * 获取合同任务详情
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/tasks/{taskId}")
     @Operation(summary = "获取任务详情", description = "获取合同审查任务的详细信息")
     public ResponseEntity<ContractTaskDetailDto> getContractTask(@PathVariable("taskId") Long taskId) {
@@ -103,6 +107,7 @@ public class ContractReviewController {
     /**
      * 根据合同ID获取任务列表
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/contracts/{contractId}/tasks")
     @Operation(summary = "获取合同任务", description = "获取指定合同的所有审查任务")
     public ResponseEntity<List<ContractTaskDto>> getTasksByContractId(
@@ -119,6 +124,7 @@ public class ContractReviewController {
     /**
      * 重试任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping("/{taskId}/retry")
     @Operation(summary = "重试任务", description = "重试失败的任务")
     public ResponseEntity<Void> retryTask(@PathVariable("taskId") Long taskId) {
@@ -130,6 +136,7 @@ public class ContractReviewController {
     /**
      * 获取合同任务列表（带统计信息）
      */
+    @Anonymous
     @GetMapping("/tasks")
     @Operation(summary = "获取任务列表", description = "获取合同审查任务列表，包含统计信息和分页查询")
     public ResponseEntity<TaskListResponseDto> getTaskList(@Valid TaskListQueryRequestDto queryRequest) {
@@ -140,6 +147,7 @@ public class ContractReviewController {
     /**
      * 获取任务实时进度
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/tasks/{taskId}/progress")
     @Operation(summary = "获取任务进度", description = "获取任务的实时进度和预计剩余时间")
     public ResponseEntity<TaskProgressDto> getTaskProgress(@PathVariable("taskId") Long taskId) {
@@ -152,6 +160,7 @@ public class ContractReviewController {
      * 获取报告详情
      * 根据任务ID获取完整的审查报告信息
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/reports/{taskId}")
     @Operation(summary = "获取报告详情", description = "根据任务ID获取完整的审查报告信息")
     public ResponseEntity<ApiResponse<ReportDetailDto>> getReportDetail(@PathVariable("taskId") Long taskId) {

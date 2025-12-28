@@ -9,6 +9,8 @@ import com.contractreview.reviewengine.domain.model.TaskId;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskStatisticsDto;
 import com.contractreview.reviewengine.interfaces.rest.mapper.TaskMapper;
+import com.ruoyi.common.annotation.Anonymous;
+import com.ruoyi.feign.annotation.RemotePreAuthorize;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,6 +45,7 @@ public class TaskController {
     /**
      * 获取任务详情
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/{taskId}")
     @Operation(summary = "获取任务详情", description = "根据任务ID获取任务详细信息")
     public ResponseEntity<TaskDto> getTask(@PathVariable Long taskId) {
@@ -54,6 +57,7 @@ public class TaskController {
     /**
      * 分页获取任务列表
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping
     @Operation(summary = "获取任务列表", description = "分页获取任务列表，可按状态筛选")
     public ResponseEntity<Page<TaskDto>> getTasks(
@@ -100,6 +104,7 @@ public class TaskController {
     /**
      * 创建新任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping
     @Operation(summary = "创建新任务", description = "创建新的任务")
     public ResponseEntity<TaskDto> createTask(
@@ -118,6 +123,7 @@ public class TaskController {
     /**
      * 启动任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping("/{taskId}/start")
     @Operation(summary = "启动任务", description = "启动指定的任务")
     public ResponseEntity<Void> startTask(@PathVariable Long taskId) {
@@ -129,6 +135,7 @@ public class TaskController {
     /**
      * 完成任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping("/{taskId}/complete")
     @Operation(summary = "完成任务", description = "完成指定的任务")
     public ResponseEntity<Void> completeTask(@PathVariable Long taskId) {
@@ -140,6 +147,7 @@ public class TaskController {
     /**
      * 取消任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @PostMapping("/{taskId}/cancel")
     @Operation(summary = "取消任务", description = "取消指定的任务")
     public ResponseEntity<Void> cancelTask(@PathVariable Long taskId) {
@@ -151,6 +159,7 @@ public class TaskController {
     /**
      * 删除任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @DeleteMapping("/{taskId}")
     @Operation(summary = "删除任务", description = "删除指定的任务")
     public ResponseEntity<Void> deleteTask(@PathVariable("taskId") Long taskId) {
@@ -162,6 +171,7 @@ public class TaskController {
     /**
      * 获取任务统计信息
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common')")
     @GetMapping("/statistics")
     @Operation(summary = "获取任务统计", description = "获取各状态任务的统计信息")
     public ResponseEntity<TaskStatisticsDto> getTaskStatistics() {
@@ -173,6 +183,7 @@ public class TaskController {
     /**
      * 获取可重试任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/retryable")
     @Operation(summary = "获取可重试任务", description = "获取可以重试的失败任务列表")
     public ResponseEntity<List<TaskDto>> getRetryableTasks() {
@@ -186,6 +197,7 @@ public class TaskController {
     /**
      * 根据类型获取任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/type/{taskType}")
     @Operation(summary = "根据类型获取任务", description = "根据任务类型获取任务列表")
     public ResponseEntity<List<TaskDto>> getTasksByType(@PathVariable String taskType) {
@@ -200,6 +212,7 @@ public class TaskController {
     /**
      * 获取所有任务
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/all")
     @Operation(summary = "获取所有任务", description = "获取所有任务列表")
     public ResponseEntity<List<TaskDto>> getAllTasks() {
@@ -213,6 +226,7 @@ public class TaskController {
     /**
      * 获取任务状态显示名称列表
      */
+    @Anonymous
     @GetMapping("/statuses")
     @Operation(summary = "获取任务状态列表", description = "获取所有任务状态的显示名称")
     public ResponseEntity<List<String>> getTaskStatuses() {
@@ -225,6 +239,7 @@ public class TaskController {
     /**
      * 检查任务名称是否存在
      */
+    @RemotePreAuthorize("@ss.hasAnyRoles('admin,common,guest')")
     @GetMapping("/check-name")
     @Operation(summary = "检查任务名称", description = "检查指定的任务名称是否已存在")
     public ResponseEntity<Boolean> checkTaskNameExists(
