@@ -10,6 +10,7 @@ import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.infrastructure.service.ContractTaskInfraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,9 @@ public class ClauseExtractionExecutor {
     private final ClauseExtractionFeignClient clauseExtractionFeignClient;
     private final ContractTaskInfraService contractTaskInfraService;
     private ContractReview contractTask;
+
+    @Value("${ruoyi.remote-auth.secret:}")
+    private String secret;
 
     /**
      * 批量处理条款抽取任务
@@ -110,7 +114,7 @@ public class ClauseExtractionExecutor {
                 log.debug("调用条款抽取服务处理合同 {}", contractId);
             }
 
-            TriggerClauseExtractionResponse extractionResult = clauseExtractionFeignClient.triggerClauseExtraction(contractId);
+            TriggerClauseExtractionResponse extractionResult = clauseExtractionFeignClient.triggerClauseExtraction(contractId, secret);
 
             log.debug("合同 {} 条款抽取状态为: {}，抽取到 {} 个条款", contractId, extractionResult.getExtractionStatus(), extractionResult.getExtractedClauseNumber());
             // TODO 现在的逻辑是有抽取任务进行中就不重新触发，后续可以加redis来加上次数标记，一定轮次后强制重试或者并日志报错。

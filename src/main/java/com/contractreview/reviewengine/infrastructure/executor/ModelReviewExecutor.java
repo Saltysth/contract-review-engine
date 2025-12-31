@@ -17,7 +17,6 @@ import com.contract.common.feign.dto.ReviewRuleFeignDTO;
 import com.contract.common.feign.dto.ReviewRulePageResultFeignDTO;
 import com.contract.common.feign.dto.ReviewRuleQueryFeignDTO;
 import com.contractreview.reviewengine.application.service.ContractReviewService;
-import com.contractreview.reviewengine.application.service.TaskService;
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
 import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
@@ -25,21 +24,21 @@ import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
 import com.contractreview.reviewengine.domain.model.ReviewRuleResultEntity;
 import com.contractreview.reviewengine.domain.model.Task;
+import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.Evidence;
 import com.contractreview.reviewengine.domain.valueobject.KeyPoint;
-import com.contractreview.reviewengine.domain.repository.TaskRepository;
 import com.contractreview.reviewengine.domain.valueobject.ReviewConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 /**
@@ -60,7 +59,9 @@ public class ModelReviewExecutor {
     private final PromptFeignClient promptFeignClient;
     private final AiClient aiClient;
     private final ObjectMapper objectMapper;
-    private final TaskService taskService;
+
+    @Value("${ruoyi.remote-auth.secret:}")
+    private String secret;
 
     /**
      * 批量处理模型审查任务
@@ -148,12 +149,12 @@ public class ModelReviewExecutor {
     private String arrangePrompt(ContractReview contractTask) {
         ReviewRuleQueryFeignDTO reviewRuleQueryFeignDTO = getReviewRuleQueryFeignDTO(contractTask);
         ReviewRulePageResultFeignDTO ruleResult =
-            reviewRuleFeignClient.searchReviewRules(reviewRuleQueryFeignDTO);
+            reviewRuleFeignClient.searchReviewRules(reviewRuleQueryFeignDTO, secret);
         List<ReviewRuleFeignDTO> rules = ruleResult.getRecords();
 
         // 获取条款
         List<ClauseFeignDTO> clauses =
-            clauseFeignClient.getClausesByContractId(contractTask.getContractId());
+            clauseFeignClient.getClausesByContractId(contractTask.getContractId(), secret);
 
         PromptQueryFeignDTO queryFeignDTO = new PromptQueryFeignDTO();
         // 合同类型+提示词 即为提示词的模型审查命名规则 并且
@@ -163,7 +164,7 @@ public class ModelReviewExecutor {
         queryFeignDTO.setEnabled(true);
         queryFeignDTO.setPromptTypeList(List.of("INNER"));
         queryFeignDTO.setPageSize(Integer.MAX_VALUE);
-        PromptPageResultFeignDTO systemPrompts = promptFeignClient.searchPrompts(queryFeignDTO);
+        PromptPageResultFeignDTO systemPrompts = promptFeignClient.searchPrompts(queryFeignDTO, secret);
         List<PromptFeignDTO> prompts = systemPrompts.getRecords();
         if (prompts == null || prompts.size() != 1) {
             log.error("模型审查查询提示词遇到错误");
@@ -334,7 +335,7 @@ public class ModelReviewExecutor {
                 .maxTokens(102400)
                 .responseReformat(ChatRequest.ResponseReformat.builder().type("json").build())
                 .messages(messages)
-                .build());
+                .build(), secret);
 
             if (response == null || response.getData() == null ||
                 response.getData().getMessages() == null || response.getData().getMessages().isEmpty()) {

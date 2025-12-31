@@ -176,4 +176,6 @@ app:
         enabled: true
         url: ${WEBHOOK_URL:}
 
-# 管理端点配置
+ruoyi:
+  remote-auth:
+    secret: SaltyFishSecretValue

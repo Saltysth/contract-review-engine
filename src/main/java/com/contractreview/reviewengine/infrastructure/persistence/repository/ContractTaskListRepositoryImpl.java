@@ -1,13 +1,12 @@
 package com.contractreview.reviewengine.infrastructure.persistence.repository;
 
 import com.contractreview.reviewengine.domain.enums.ExecutionStage;
+import com.contractreview.reviewengine.domain.enums.RiskLevel;
 import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.repository.ContractTaskListRepository;
+import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
 import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskListItemDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
-import com.contractreview.reviewengine.domain.valueobject.ReviewProgress;
-import com.contractreview.reviewengine.domain.enums.RiskLevel;
-import com.contractreview.reviewengine.domain.model.ReviewResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -18,10 +17,10 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
@@ -53,12 +52,19 @@ public class ContractTaskListRepositoryImpl implements ContractTaskListRepositor
             .map(this::enrichProgressInfo)
             .collect(Collectors.toList());
 
+        // 计算总数（需要在边界检查前）
+        long totalElements = countTotalTasks(queryRequest);
+
         // 手动分页
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), taskItems.size());
-        List<ContractTaskListItemDto> pageContent = taskItems.subList(start, end);
 
-        long totalElements = countTotalTasks(queryRequest);
+        // 边界检查：防止空列表或起始索引超出范围
+        if (start >= taskItems.size()) {
+            return new PageImpl<>(List.of(), pageable, totalElements);
+        }
+
+        List<ContractTaskListItemDto> pageContent = taskItems.subList(start, end);
 
         return new PageImpl<>(pageContent, pageable, totalElements);
     }
