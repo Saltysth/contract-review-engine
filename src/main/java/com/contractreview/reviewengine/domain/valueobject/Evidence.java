@@ -1,7 +1,8 @@
 package com.contractreview.reviewengine.domain.valueobject;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.Enumerated;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * 证据信息
@@ -58,5 +60,21 @@ public class Evidence {
 
         private final String type;
         private final String description;
+
+        @JsonValue
+        public String getType() {
+            return type;
+        }
+
+        @JsonCreator
+        public static EvidenceType fromString(String value) {
+            if (value == null) {
+                return null;
+            }
+            return Stream.of(values())
+                .filter(e -> e.type.equalsIgnoreCase(value))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown EvidenceType: " + value));
+        }
     }
 }

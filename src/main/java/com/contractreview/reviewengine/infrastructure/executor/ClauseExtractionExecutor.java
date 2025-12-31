@@ -53,12 +53,12 @@ public class ClauseExtractionExecutor {
             try {
                 processSingleTask(task);
                 successCount++;
-                log.debug("任务 {} 条款抽取处理成功", task.getId());
+                log.debug("任务 {} 条款抽取触发/检查成功", task.getId());
 
             } catch (Exception e) {
                 handleTaskExecutionFailure(task, e);
                 failureCount++;
-                log.error("任务 {} 条款抽取处理失败: {}", task.getId(), e.getMessage(), e);
+                log.error("任务 {} 条款抽取触发/检查失败: {}", task.getId(), e.getMessage(), e);
             }
         }
 
