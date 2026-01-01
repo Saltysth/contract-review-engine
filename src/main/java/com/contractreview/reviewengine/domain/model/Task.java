@@ -117,6 +117,7 @@ public class Task {
         validateStatusTransition(TaskStatus.RUNNING);
         this.status = TaskStatus.RUNNING;
         this.startTime = LocalDateTime.now();
+        this.completedAt = null;
         updateAuditInfo();
     }
 
@@ -135,6 +136,7 @@ public class Task {
             throw new IllegalStateException("Current stage cannot be set finished");
         }
         this.status = TaskStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
         updateAuditInfo();
     }
 
@@ -173,6 +175,8 @@ public class Task {
      */
     public void reset() {
         this.status = TaskStatus.PENDING;
+        this.completedAt = null;
+        this.errorMessage = null;
         updateAuditInfo();
     }
 
