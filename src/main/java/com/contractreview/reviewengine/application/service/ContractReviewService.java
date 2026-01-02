@@ -5,6 +5,8 @@ import com.contract.common.feign.ClauseExtractionFeignClient;
 import com.contract.common.feign.ClauseFeignClient;
 import com.contract.common.feign.ContractFeignClient;
 import com.contract.common.feign.dto.ContractFeignDTO;
+import com.contractreview.reviewengine.domain.enums.ExecutionStage;
+import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import com.contractreview.reviewengine.domain.enums.TaskType;
 import com.contractreview.reviewengine.domain.model.ContractReview;
 import com.contractreview.reviewengine.domain.model.ReviewResult;
@@ -24,16 +26,14 @@ import com.contractreview.reviewengine.interfaces.rest.dto.ContractTaskDetailDto
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListQueryRequestDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskListResponseDto;
 import com.contractreview.reviewengine.interfaces.rest.dto.TaskProgressDto;
-import com.contractreview.reviewengine.domain.enums.ExecutionStage;
-import com.contractreview.reviewengine.domain.enums.TaskStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +57,9 @@ public class ContractReviewService {
     private final ClauseExtractionFeignClient clauseExtractionFeignClient;
     private final TaskEntityRepository taskEntityRepository;
     private final ClauseFeignClient clauseFeignClient;
+
+    @Value("${ruoyi.remote-auth.secret:}")
+    private String secret;
 
     /**
      * 创建合同审查任务
@@ -554,7 +557,7 @@ public class ContractReviewService {
 
         // 调用合同管理服务获取合同信息
         try {
-            ContractFeignDTO contract = contractFeignClient.getContractById(contractReview.getContractId());
+            ContractFeignDTO contract = contractFeignClient.getContractById(contractReview.getContractId(), secret);
             if (contract != null) {
                 return contract.getContractName();
             }
