@@ -201,4 +201,4 @@ curl http://localhost:8080/contract-review-engine/api/v1/contract-review/tasks/{
 MIT License
 
 ## 联系方式
-开发团队: dev@saltyfish.com
+开发者: 1432488520@qq.com
